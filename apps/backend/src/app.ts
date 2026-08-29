@@ -88,9 +88,6 @@ export function buildApp(): FastifyInstance {
   app.get("/", async () => {
     return { status: "ok", service: "CallTest API", version: "1.0.0" };
   });
-  app.head("/", async (_req, reply) => {
-    return reply.status(200).send();
-  });
 
   // Module Routes
   app.register(healthRoutes);
