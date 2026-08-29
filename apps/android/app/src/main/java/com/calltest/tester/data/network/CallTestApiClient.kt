@@ -79,8 +79,8 @@ data class ApiResponse<T>(
 )
 
 object CallTestApiClient {
-    // Por defecto conecta con el backend local o configurable
-    var baseUrl: String = "http://10.0.2.2:3000"
+    // URL en producción desplegada en Render con HTTPS
+    var baseUrl: String = "https://calltest-api.onrender.com"
 
     val json = Json {
         ignoreUnknownKeys = true

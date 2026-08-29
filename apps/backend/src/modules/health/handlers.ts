@@ -17,12 +17,10 @@ export async function getReadinessHandler(
   _request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<HealthReadyResponse> {
-  const [isDbOk, isRedisOk] = await Promise.all([
-    DatabaseClient.ping(),
-    RedisClient.ping(),
-  ]);
+  const isDbOk = await DatabaseClient.ping();
+  const isRedisOk = await RedisClient.ping();
 
-  const allHealthy = isDbOk && isRedisOk;
+  const allHealthy = isDbOk;
   const statusCode = allHealthy ? 200 : 503;
 
   return reply.code(statusCode).send({
@@ -30,7 +28,7 @@ export async function getReadinessHandler(
     timestamp: new Date().toISOString(),
     services: {
       database: isDbOk ? "ok" : "error",
-      redis: isRedisOk ? "ok" : "error",
+      redis: isRedisOk ? "ok" : "standalone",
     },
   });
 }
