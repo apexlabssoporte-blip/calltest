@@ -84,6 +84,14 @@ export function buildApp(): FastifyInstance {
   // OpenAPI / Swagger Documentation
   app.register(swaggerPlugin);
 
+  // Root health route for load balancers
+  app.get("/", async () => {
+    return { status: "ok", service: "CallTest API", version: "1.0.0" };
+  });
+  app.head("/", async (_req, reply) => {
+    return reply.status(200).send();
+  });
+
   // Module Routes
   app.register(healthRoutes);
   app.register(authRoutes);
