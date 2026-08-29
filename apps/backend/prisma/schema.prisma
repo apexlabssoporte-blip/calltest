@@ -1,0 +1,1279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+enum UserRole {
+  DEVELOPER
+  TESTER
+  BOTH
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum AppPlatform {
+  ANDROID
+}
+
+enum AppStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  PUBLIC
+  ARCHIVED
+  SUSPENDED
+}
+
+enum CampaignStatus {
+  DRAFT
+  READY
+  ACTIVE
+  TESTING
+  COMPLETED
+  PUBLIC
+  PAUSED
+  CANCELLED
+  SUSPENDED
+  ENDED_EARLY
+  AT_RISK
+}
+
+enum CampaignRisk {
+  HEALTHY
+  WARNING
+  AT_RISK
+  CRITICAL
+}
+
+enum TesterAssignmentType {
+  PRIMARY
+  PROTECTION
+  REPLACEMENT
+  CORE_TESTER
+  RELIABLE_REINFORCEMENT
+  BACKUP
+}
+
+enum TesterStatus {
+  INVITED
+  ACTIVE
+  LOW_ACTIVITY
+  ABANDONED
+  COMPLETED
+  REMOVED
+}
+
+enum TesterExposureLevel {
+  NEW
+  PROBATION
+  ESTABLISHED
+  HIGH_PERFORMER
+}
+
+enum MissionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MissionStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  REJECTED
+}
+
+enum AttemptStatus {
+  AVAILABLE
+  STARTED
+  SUBMITTED
+  VALIDATED
+  REJECTED
+  EXPIRED
+}
+
+enum ValidationMethod {
+  MANUAL
+  EVENT
+  CHECKLIST
+  SDK_EVENT
+  SCREEN_FLOW
+  HYBRID
+}
+
+enum MissionQualityRating {
+  TOO_COMPLEX
+  CONFUSING
+  BROKEN
+  TOO_LONG
+  UNCLEAR
+  GOOD
+}
+
+enum ActivityEventType {
+  APP_OPENED
+  APP_CLOSED
+  SESSION_STARTED
+  SESSION_ENDED
+  SCREEN_VIEW
+  USER_INTERACTION
+  MISSION_STARTED
+  MISSION_SUBMITTED
+  MISSION_COMPLETED
+  FEEDBACK_SUBMITTED
+  BUG_REPORTED
+}
+
+enum ActivityState {
+  ACTIVE
+  LOW_ACTIVITY
+  ABANDONED
+}
+
+enum TrustRank {
+  NEW
+  TRUSTED
+  RELIABLE
+  EXCELLENT
+  RESTRICTED
+}
+
+enum FraudSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ReputationStatus {
+  NORMAL
+  WATCH
+  RESTRICTED
+  SUSPENDED
+  BANNED
+}
+
+enum FraudEventType {
+  DUPLICATE_EVENT
+  CLOCK_MANIPULATION
+  IMPOSSIBLE_SESSION
+  RAPID_MISSION_COMPLETION
+  ABNORMAL_MISSION_PATTERN
+  REPEATED_ASSIGNMENT_ABUSE
+  MULTIPLE_ACCOUNT_SIGNAL
+  SUSPICIOUS_ACTIVITY_BURST
+  REPEATED_EVIDENCE_HASH
+  EVIDENCE_REUSE_ACROSS_CAMPAIGNS
+  EXCESSIVE_REJECTED_EVIDENCE
+  IMPOSSIBLE_EVIDENCE_PATTERN
+  RAPID_CLAIM_WITHOUT_PARTICIPATION
+}
+
+enum TrustEventType {
+  INITIAL_ASSIGNMENT
+  CAMPAIGN_COMPLETED
+  MISSION_VALIDATED
+  RECOVERY_BONUS
+  PENALTY_APPLIED
+  MANUAL_OVERRIDE
+}
+
+enum TrustPenaltyType {
+  CAMPAIGN_ABANDONMENT
+  FRAUD_SIGNAL
+  REPEATED_SUSPICIOUS_ACTIVITY
+  INVALID_MISSION_BEHAVIOR
+  ACCOUNT_ABUSE
+}
+
+enum FraudDecisionAction {
+  NO_ACTION
+  MONITOR
+  FLAG
+  RESTRICT
+  SUSPEND
+  BAN
+}
+
+enum RewardType {
+  XP
+  GOLD
+  COMBINED
+}
+
+enum RewardStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RewardSource {
+  MISSION_VALIDATED
+  MISSION_COMPLETED
+  FEEDBACK_SUBMITTED
+  USEFUL_FEEDBACK
+  CAMPAIGN_PARTICIPATION_COMPLETED
+  CAMPAIGN_COMPLETED
+  VALID_BUG_REPORT
+  EXCELLENT_REPLACEMENT
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  CANCELLED
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+}
+
+enum NotificationType {
+  TESTER_CAMPAIGN_AVAILABLE
+  TESTER_MISSION_AVAILABLE
+  MISSION_COMPLETED
+  MISSION_REMINDER
+  CAMPAIGN_REMINDER
+  CAMPAIGN_COMPLETED
+  CAMPAIGN_PARTICIPATION_THANK_YOU
+  CAMPAIGN_REPLACEMENT
+  CAMPAIGN_LOW_ACTIVITY
+  CAMPAIGN_HEALTH_WARNING
+  CAMPAIGN_HEALTH_CRITICAL
+  NEW_TESTER_ASSIGNED
+  TESTER_LOW_ACTIVITY
+  TESTER_ABANDONED
+  TESTER_REPLACEMENT_ASSIGNED
+  CAMPAIGN_TARGET_REACHED
+  TRUST_UPDATED
+  REPUTATION_UPDATED
+  SYSTEM
+  APP_PUBLIC_VERIFIED
+  APP_PUBLIC_STATUS_CHANGED
+  PREMIUM
+  EVIDENCE_SUBMITTED
+  EVIDENCE_APPROVED
+  EVIDENCE_REJECTED
+  NEW_RELIABLE_TESTER_ASSIGNED
+  TESTER_AT_RISK
+  TESTER_REPLACED
+  NEW_MISSION
+  DAILY_MISSIONS_AVAILABLE
+  MISSION_DUE
+  CAMPAIGN_DAY_UPDATE
+  CAMPAIGN_ENDED_EARLY
+  NEW_CAMPAIGN_AVAILABLE
+  RELIABILITY_IMPROVED
+  NEW_OPPORTUNITY
+  PARTICIPATION_VERIFIED
+  PARTICIPATION_VERIFICATION_PENDING
+  AVAILABILITY_REPORT_RECEIVED
+  AVAILABILITY_EVIDENCE_REQUESTED
+  AVAILABILITY_RESOLVED
+}
+
+enum PlayStoreValidationStatus {
+  UNKNOWN
+  NOT_FOUND
+  PRIVATE
+  TESTING
+  PUBLIC
+  UNAVAILABLE
+  ERROR
+}
+
+enum GoogleGroupValidationStatus {
+  UNKNOWN
+  ACCESSIBLE
+  REQUIRES_APPROVAL
+  INACCESSIBLE
+  INVALID_URL
+}
+
+enum FraudSignalType {
+  EMULATOR_DETECTED
+  REPLAY_ATTACK
+  RAPID_FIRE_EVENTS
+  IMPOSSIBLE_TRAVEL
+  DEVICE_FINGERPRINT_MISMATCH
+  AUTOMATED_BEHAVIOR
+  REPEATED_EVIDENCE_HASH
+  EVIDENCE_REUSE_ACROSS_CAMPAIGNS
+  EXCESSIVE_REJECTED_EVIDENCE
+  IMPOSSIBLE_EVIDENCE_PATTERN
+  RAPID_CLAIM_WITHOUT_PARTICIPATION
+}
+
+enum InstallationStatus {
+  NOT_STARTED
+  INSTALL_ATTEMPTED
+  INSTALL_CLAIMED
+  INSTALL_DETECTED
+  FIRST_OPEN
+  ACTIVE
+  UNVERIFIED
+  REMOVED
+}
+
+enum InstallationVerificationMethod {
+  SDK
+  PLAY_STORE_FLOW
+  USER_CONFIRMATION
+  MISSION_ACTIVITY
+  EVIDENCE
+}
+
+enum EvidenceStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum EvidenceRejectionReason {
+  NOT_VISIBLE
+  WRONG_SCREEN
+  DOES_NOT_MATCH_MISSION
+  BLURRY
+  INCOMPLETE
+  DUPLICATE
+  OTHER
+}
+
+enum ParticipationStatus {
+  UNVERIFIED
+  PARTIALLY_VERIFIED
+  VERIFIED
+  ACTIVE
+  LOW_ACTIVITY
+  ABANDONED
+  COMPLETED
+}
+
+enum AuditAction {
+  USER_REGISTERED
+  LOGIN
+  LOGOUT
+  USER_LOGIN
+  APP_CREATED
+  APP_UPDATED
+  APP_ARCHIVED
+  CAMPAIGN_CREATED
+  CAMPAIGN_STATE_CHANGED
+  CAMPAIGN_STATUS_CHANGED
+  CAMPAIGN_HEALTH_CHANGED
+  REPLACEMENT_REQUESTED
+  MATCHING_EXECUTED
+  CAMPAIGN_TESTER_ADDED
+  CAMPAIGN_TESTER_REMOVED
+  REFRESH_TOKEN_REVOKED
+  TESTER_ASSIGNED
+  TESTER_ASSIGNMENT_REJECTED
+  TESTER_REPLACED
+  EXPOSURE_CHANGED
+  MISSION_CREATED
+  MISSION_UPDATED
+  MISSION_APPROVED
+  MISSION_REJECTED
+  MISSION_ATTEMPT_STARTED
+  MISSION_ATTEMPT_SUBMITTED
+  MISSION_ATTEMPT_VALIDATED
+  MISSION_ATTEMPT_REJECTED
+  DIFFICULTY_FEEDBACK_SUBMITTED
+  QUALITY_FEEDBACK_SUBMITTED
+  REWARD_ISSUED
+  REWARD_GRANTED
+  REWARD_REJECTED
+  REWARD_PENDING
+  REWARD_REVIEWED
+  BALANCE_CHANGED
+  TRUST_CHANGED
+  TRUST_ADJUSTED
+  TRUST_PENALTY_APPLIED
+  TRUST_RECOVERY
+  FRAUD_EVENT_CREATED
+  FRAUD_DECISION_MADE
+  REPUTATION_CHANGED
+  USER_RESTRICTED
+  USER_SUSPENDED
+  USER_BANNED
+  NOTIFICATION_FAILED
+  NOTIFICATION_PREFERENCE_UPDATED
+  DEVICE_TOKEN_REGISTERED
+  DEVICE_TOKEN_REVOKED
+  STORE_VALIDATION_PERFORMED
+  GROUP_VALIDATION_PERFORMED
+  CAMPAIGN_LINKS_TEST_CONFIRMED
+  CAMPAIGN_COMPLETED_OPERATIONS
+  CAMPAIGN_PUBLIC_VERIFIED
+  INSTALLATION_CLAIMED
+  INSTALLATION_DETECTED
+  INSTALLATION_VERIFIED
+  EVIDENCE_SUBMITTED
+  EVIDENCE_APPROVED
+  EVIDENCE_REJECTED
+  EVIDENCE_WITHDRAWN
+  PARTICIPATION_VERIFIED
+  APP_SDK_STATUS_CHANGED
+  REPORT_SUBMITTED
+  REPORT_DEVELOPER_REVIEWED
+  REPORT_ESCALATED
+  AI_REVIEW_REQUESTED
+  AI_REVIEW_COMPLETED
+  AI_REVIEW_FAILED
+  AI_REVIEW_SKIPPED
+  AI_BUDGET_EXCEEDED
+  AI_REVIEW_RATE_LIMITED
+  REPORT_HUMAN_FINALIZED
+  REPORT_CLUSTER_CREATED
+  REPORT_CLUSTER_UPDATED
+  AVAILABILITY_REPORT_CREATED
+  AVAILABILITY_REPORT_DUPLICATE
+  DEVELOPER_EVIDENCE_REQUESTED
+  DEVELOPER_EVIDENCE_SUBMITTED
+  AVAILABILITY_REVIEW_STARTED
+  AVAILABILITY_CONFIRMED
+  AVAILABILITY_RESTRICTED
+  AVAILABILITY_UNVERIFIED
+  AVAILABILITY_RESOLVED
+  AVAILABILITY_DISMISSED
+  MISSION_BLOCKED_BY_AVAILABILITY
+  IDENTITY_CREATED
+  IDENTITY_SIGNAL_DETECTED
+  RISK_SIGNAL_CREATED
+  RISK_REVIEW_REQUIRED
+  PROGRESSION_EVALUATED
+  CAMPAIGN_COMPLETION_COUNTED
+  MATCHING_PRIORITY_CALCULATED
+  MATCHING_ASSIGNMENT_CREATED
+  MATCHING_ASSIGNMENT_REJECTED
+  DUPLICATE_PROGRESS_ATTEMPT
+}
+
+enum SdkIntegrationStatus {
+  NOT_CONFIGURED
+  SDK_ENABLED
+  NO_SDK
+}
+
+enum ReportCategory {
+  FUNCTIONAL
+  UI
+  PERFORMANCE
+  CRASH
+  INSTALLATION
+  ACCESSIBILITY
+  SECURITY
+  OTHER
+}
+
+enum ReportSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ReportStatus {
+  SUBMITTED
+  DEVELOPER_REVIEW
+  VALID
+  INVALID
+  NEEDS_MORE_EVIDENCE
+  ESCALATED
+  AI_REVIEW_PENDING
+  AI_REVIEWED
+  HUMAN_REVIEW
+  CONFIRMED
+  REJECTED
+}
+
+enum DeveloperReportDecision {
+  VALID
+  INVALID
+  NEEDS_MORE_EVIDENCE
+  ESCALATED
+}
+
+enum AiReportClassification {
+  LIKELY_VALID
+  LIKELY_INVALID
+  INCONCLUSIVE
+}
+
+enum AiRecommendedAction {
+  HUMAN_REVIEW
+  REQUEST_MORE_EVIDENCE
+  NO_ACTION
+}
+
+enum HumanReportDecision {
+  CONFIRMED
+  REJECTED
+  NEEDS_MORE_EVIDENCE
+}
+
+enum ReportClusterStatus {
+  OPEN
+  ESCALATED
+  RESOLVED
+  CLOSED
+}
+
+// -----------------------------------------------------------------------------
+// ENTITIES
+// -----------------------------------------------------------------------------
+
+model User {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  email                  String                  @unique
+  passwordHash           String
+  displayName            String
+  name                   String?
+  role                   UserRole                @default(TESTER)
+  status                 UserStatus              @default(ACTIVE)
+  lastLoginAt            DateTime?
+  trustScore             Int                     @default(50)
+  rank                   TrustRank               @default(NEW)
+  xpBalance              Int                     @default(0)
+  goldBalance            Int                     @default(0)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  // Relations
+  developerApps          App[]                   @relation("DeveloperApps")
+  testerAssignments      CampaignTester[]        @relation("TesterAssignments")
+  refreshTokens          RefreshToken[]
+  exposureProfile        TesterExposureProfile?
+  trustProfile           TrustProfile?
+  trustHistories         TrustHistory[]          @relation("UserTrustHistories")
+  trustPenalties         TrustPenalty[]          @relation("UserTrustPenalties")
+  fraudEvents            FraudEvent[]            @relation("UserFraudEvents")
+  missionAttempts        MissionAttempt[]        @relation("UserMissionAttempts")
+  activityEvents         ActivityEvent[]         @relation("UserActivityEvents")
+  feedbacks              Feedback[]              @relation("UserFeedbacks")
+  bugReports             BugReport[]             @relation("UserBugReports")
+  rewards                Reward[]                @relation("UserRewards")
+  notifications          Notification[]          @relation("UserNotifications")
+  notificationPreference NotificationPreference?
+  devicePushTokens       DevicePushToken[]       @relation("UserDevicePushTokens")
+  auditLogs              AuditLog[]              @relation("UserAuditLogs")
+  installationRecords    InstallationRecord[]    @relation("TesterInstallationRecords")
+  submittedEvidences     MissionEvidence[]       @relation("TesterMissionEvidences")
+  reviewedEvidences      MissionEvidence[]       @relation("DeveloperReviewedEvidences")
+  testerReports          TesterReport[]          @relation("TesterReports")
+  developerReports       TesterReport[]          @relation("DeveloperReviewedReports")
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([rank])
+  @@index([trustScore])
+  @@map("users")
+}
+
+model Notification {
+  id                 String               @id @default(uuid()) @db.Uuid
+  userId             String               @db.Uuid
+  type               NotificationType
+  title              String
+  body               String
+  data               Json?
+  status             NotificationStatus   @default(PENDING)
+  priority           NotificationPriority @default(NORMAL)
+  channel            NotificationChannel  @default(IN_APP)
+  provider           String?              @default("in_app")
+  providerMessageId  String?
+  deduplicationKey   String?              @unique
+  readAt             DateTime?
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  failedAt           DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  user               User                 @relation("UserNotifications", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @db.Uuid
+  campaignNotifications Boolean  @default(true)
+  missionNotifications  Boolean  @default(true)
+  trustNotifications    Boolean  @default(true)
+  systemNotifications   Boolean  @default(true)
+  pushNotifications     Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notification_preferences")
+}
+
+model DevicePushToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  token       String    @unique
+  platform    String    @default("android")
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation("UserDevicePushTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("device_push_tokens")
+}
+
+model TrustProfile {
+  id                         String            @id @default(uuid()) @db.Uuid
+  userId                     String            @unique @db.Uuid
+  trustScore                 Int               @default(50)
+  trustRank                  TrustRank         @default(NEW)
+  reputationStatus           ReputationStatus  @default(NORMAL)
+  completedCampaignsCount    Int               @default(0)
+  abandonedCampaignsCount    Int               @default(0)
+  consecutiveGoodCampaigns   Int               @default(0)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+
+  user                       User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([trustRank])
+  @@index([reputationStatus])
+  @@map("trust_profiles")
+}
+
+model TrustHistory {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String            @db.Uuid
+  previousScore        Int
+  newScore             Int
+  previousRank         TrustRank
+  newRank              TrustRank
+  eventType            TrustEventType
+  reason               String
+  sourceId             String?
+  metadata             Json?
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  user                 User              @relation("UserTrustHistories", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("trust_histories")
+}
+
+model TrustPenalty {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String            @db.Uuid
+  type                 TrustPenaltyType
+  severity             FraudSeverity     @default(LOW)
+  scoreImpact          Int
+  reason               String
+  sourceId             String?
+  idempotencyKey       String?           @unique
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  user                 User              @relation("UserTrustPenalties", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("trust_penalties")
+}
+
+model FraudEvent {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String            @db.Uuid
+  type                 FraudEventType
+  severity             FraudSeverity     @default(LOW)
+  scoreImpact          Int               @default(0)
+  reason               String
+  sourceId             String?
+  idempotencyKey       String?           @unique
+  metadata             Json?
+  resolvedAt           DateTime?
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  user                 User              @relation("UserFraudEvents", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([type])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("fraud_events")
+}
+
+model TesterExposureProfile {
+  id                       String              @id @default(uuid()) @db.Uuid
+  userId                   String              @unique @db.Uuid
+  level                    TesterExposureLevel @default(NEW)
+  overrideMaxCampaigns     Int?
+  completedCampaignsCount  Int                 @default(0)
+  abandonedCampaignsCount  Int                 @default(0)
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
+  user                     User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([level])
+  @@map("tester_exposure_profiles")
+}
+
+model RefreshToken {
+  id                 String       @id @default(uuid()) @db.Uuid
+  userId             String       @db.Uuid
+  tokenHash          String       @unique
+  expiresAt          DateTime
+  createdAt          DateTime     @default(now())
+  revokedAt          DateTime?
+  replacedByTokenId  String?
+
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model App {
+  id                  String               @id @default(uuid()) @db.Uuid
+  developerId         String               @db.Uuid
+  name                String
+  packageName         String
+  platform            AppPlatform          @default(ANDROID)
+  status              AppStatus            @default(DRAFT)
+  hasCallTestSdk      Boolean              @default(false)
+  sdkIntegrationStatus SdkIntegrationStatus @default(NOT_CONFIGURED)
+  description         String?
+  playStoreUrl        String?
+  googleGroupUrl      String?
+  apiKey              String               @unique
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  // Relations
+  developer           User                 @relation("DeveloperApps", fields: [developerId], references: [id], onDelete: Restrict)
+  campaigns           Campaign[]
+  missions            Mission[]
+  activityEvents      ActivityEvent[]
+  feedbacks           Feedback[]
+  bugReports          BugReport[]
+  installationRecords InstallationRecord[]
+  testerReports       TesterReport[]
+  reportClusters      ReportCluster[]
+
+  @@index([developerId])
+  @@index([packageName])
+  @@index([status])
+  @@index([apiKey])
+  @@map("apps")
+}
+
+model Campaign {
+  id                            String                       @id @default(uuid()) @db.Uuid
+  appId                         String                       @db.Uuid
+  name                          String
+  status                        CampaignStatus               @default(DRAFT)
+  targetTesters                 Int                          @default(12)
+  maxTesters                    Int                          @default(15)
+  durationDays                  Int                          @default(14)
+  developerConfirmedLinksTest   Boolean                      @default(false)
+  storeValidationStatus         PlayStoreValidationStatus    @default(UNKNOWN)
+  groupValidationStatus         GoogleGroupValidationStatus  @default(UNKNOWN)
+  lastStoreValidationAt         DateTime?
+  lastGroupValidationAt         DateTime?
+  publicVerifiedAt              DateTime?
+  startsAt                      DateTime?
+  endsAt                        DateTime?
+  createdAt                     DateTime                     @default(now())
+  updatedAt                     DateTime                     @updatedAt
+
+  // Relations
+  app                 App                  @relation(fields: [appId], references: [id], onDelete: Restrict)
+  campaignTesters     CampaignTester[]
+  missions            Mission[]
+  feedbacks           Feedback[]
+  bugReports          BugReport[]
+  auditLogs           AuditLog[]
+  installationRecords InstallationRecord[]
+  evidences           MissionEvidence[]
+  testerReports       TesterReport[]
+  reportClusters      ReportCluster[]
+
+  @@index([appId])
+  @@index([status])
+  @@index([storeValidationStatus])
+  @@index([groupValidationStatus])
+  @@map("campaigns")
+}
+
+model CampaignTester {
+  id                   String               @id @default(uuid()) @db.Uuid
+  campaignId           String               @db.Uuid
+  testerId             String               @db.Uuid
+  assignmentType       TesterAssignmentType @default(PRIMARY)
+  status               TesterStatus         @default(INVITED)
+  activityScore        Float                @default(100.0)
+  joinedAt             DateTime             @default(now())
+  expectedEndAt        DateTime?
+  actualEndAt          DateTime?
+  isReplacement        Boolean              @default(false)
+  exitReason           String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  // Relations
+  campaign             Campaign             @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  tester               User                 @relation("TesterAssignments", fields: [testerId], references: [id], onDelete: Restrict)
+  missionAttempts      MissionAttempt[]
+  difficultyFeedbacks  MissionDifficultyFeedback[]
+  qualityFeedbacks     MissionQualityFeedback[]
+  activityEvents       ActivityEvent[]
+
+  @@index([campaignId, testerId])
+  @@index([campaignId])
+  @@index([testerId])
+  @@index([status])
+  @@index([assignmentType])
+  @@map("campaign_testers")
+}
+
+model Mission {
+  id                   String            @id @default(uuid()) @db.Uuid
+  campaignId           String            @db.Uuid
+  appId                String?           @db.Uuid
+  title                String
+  description          String?
+  objective            String
+  steps                Json
+  difficulty           MissionDifficulty @default(MEDIUM)
+  estimatedMinutes     Int               @default(15)
+  validationMethod     ValidationMethod  @default(SDK_EVENT)
+  requiresEvidence     Boolean           @default(false)
+  evidenceInstructions String?
+  rewardXp             Int               @default(50)
+  rewardGold           Int               @default(10)
+  status               MissionStatus     @default(DRAFT)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  // Relations
+  campaign             Campaign          @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  app                  App?              @relation(fields: [appId], references: [id], onDelete: SetNull)
+  attempts             MissionAttempt[]
+  difficultyFeedbacks  MissionDifficultyFeedback[]
+  qualityFeedbacks     MissionQualityFeedback[]
+  evidences            MissionEvidence[]
+  testerReports        TesterReport[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@index([difficulty])
+  @@map("missions")
+}
+
+model MissionAttempt {
+  id                   String            @id @default(uuid()) @db.Uuid
+  missionId            String            @db.Uuid
+  campaignTesterId     String            @db.Uuid
+  testerId             String            @db.Uuid
+  status               AttemptStatus     @default(STARTED)
+  attemptCount         Int               @default(1)
+  validationStatus     String?
+  validatedById        String?           @db.Uuid
+  validatedAt          DateTime?
+  validationReason     String?
+  proofData            Json?
+  startedAt            DateTime          @default(now())
+  completedAt          DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  // Relations
+  mission              Mission           @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  campaignTester       CampaignTester    @relation(fields: [campaignTesterId], references: [id], onDelete: Restrict)
+  tester               User              @relation("UserMissionAttempts", fields: [testerId], references: [id], onDelete: Restrict)
+  evidences            MissionEvidence[]
+
+  @@index([missionId])
+  @@index([campaignTesterId])
+  @@index([testerId])
+  @@index([status])
+  @@map("mission_attempts")
+}
+
+model MissionEvidence {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  missionAttemptId     String                  @db.Uuid
+  campaignId           String                  @db.Uuid
+  testerId             String                  @db.Uuid
+  missionId            String                  @db.Uuid
+  fileReference        String
+  mimeType             String
+  fileSize             Int
+  sha256               String
+  status               EvidenceStatus          @default(PENDING_REVIEW)
+  submittedAt          DateTime                @default(now())
+  reviewedAt           DateTime?
+  reviewedById         String?                 @db.Uuid
+  rejectionReason      EvidenceRejectionReason?
+  rejectionComment     String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  // Relations
+  missionAttempt       MissionAttempt          @relation(fields: [missionAttemptId], references: [id], onDelete: Cascade)
+  campaign             Campaign                @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  tester               User                    @relation("TesterMissionEvidences", fields: [testerId], references: [id], onDelete: Restrict)
+  mission              Mission                 @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  reviewedBy           User?                   @relation("DeveloperReviewedEvidences", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([missionAttemptId])
+  @@index([campaignId])
+  @@index([testerId])
+  @@index([missionId])
+  @@index([sha256])
+  @@index([status])
+  @@map("mission_evidences")
+}
+
+model InstallationRecord {
+  id                   String                          @id @default(uuid()) @db.Uuid
+  campaignId           String                          @db.Uuid
+  appId                String                          @db.Uuid
+  testerId             String                          @db.Uuid
+  installationId       String?
+  status               InstallationStatus              @default(NOT_STARTED)
+  verificationMethod   InstallationVerificationMethod  @default(USER_CONFIRMATION)
+  firstDetectedAt      DateTime?
+  firstOpenedAt        DateTime?
+  lastSeenAt           DateTime?
+  lastSessionAt        DateTime?
+  claimedAt            DateTime?
+  verifiedAt           DateTime?
+  removedAt            DateTime?
+  createdAt            DateTime                        @default(now())
+  updatedAt            DateTime                        @updatedAt
+
+  // Relations
+  campaign             Campaign                        @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  app                  App                             @relation(fields: [appId], references: [id], onDelete: Restrict)
+  tester               User                            @relation("TesterInstallationRecords", fields: [testerId], references: [id], onDelete: Restrict)
+
+  @@unique([campaignId, testerId])
+  @@index([campaignId, appId])
+  @@index([testerId, appId])
+  @@index([status])
+  @@map("installation_records")
+}
+
+model MissionDifficultyFeedback {
+  id                   String            @id @default(uuid()) @db.Uuid
+  missionId            String            @db.Uuid
+  campaignTesterId     String            @db.Uuid
+  rating               MissionDifficulty
+  createdAt            DateTime          @default(now())
+
+  mission              Mission           @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  campaignTester       CampaignTester    @relation(fields: [campaignTesterId], references: [id], onDelete: Restrict)
+
+  @@unique([missionId, campaignTesterId])
+  @@index([missionId])
+  @@index([campaignTesterId])
+  @@map("mission_difficulty_feedbacks")
+}
+
+model MissionQualityFeedback {
+  id                   String               @id @default(uuid()) @db.Uuid
+  missionId            String               @db.Uuid
+  campaignTesterId     String               @db.Uuid
+  feedback             MissionQualityRating
+  comment              String?
+  createdAt            DateTime             @default(now())
+
+  mission              Mission              @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  campaignTester       CampaignTester       @relation(fields: [campaignTesterId], references: [id], onDelete: Restrict)
+
+  @@index([missionId])
+  @@index([campaignTesterId])
+  @@index([feedback])
+  @@map("mission_quality_feedbacks")
+}
+
+model ActivityEvent {
+  id                   String            @id @default(uuid()) @db.Uuid
+  appId                String            @db.Uuid
+  campaignTesterId     String?           @db.Uuid
+  testerId             String            @db.Uuid
+  sessionId            String
+  eventType            ActivityEventType
+  eventPayload         Json?
+  deviceInfo           Json?
+  clientTimestamp      DateTime
+  serverTimestamp      DateTime          @default(now())
+  isValid              Boolean           @default(true)
+  idempotencyKey       String?           @unique
+
+  // Relations
+  app                  App               @relation(fields: [appId], references: [id], onDelete: Restrict)
+  tester               User              @relation("UserActivityEvents", fields: [testerId], references: [id], onDelete: Restrict)
+  campaignTester       CampaignTester?   @relation(fields: [campaignTesterId], references: [id], onDelete: SetNull)
+
+  @@index([appId])
+  @@index([testerId])
+  @@index([campaignTesterId])
+  @@index([sessionId])
+  @@index([eventType])
+  @@index([serverTimestamp])
+  @@map("activity_events")
+}
+
+model SessionRecord {
+  sessionId            String            @id
+  campaignTesterId     String?           @db.Uuid
+  testerId             String            @db.Uuid
+  startedAt            DateTime
+  endedAt              DateTime?
+  durationSeconds      Int?
+  source               String?
+  isAnomalous          Boolean           @default(false)
+  createdAt            DateTime          @default(now())
+
+  @@index([campaignTesterId])
+  @@index([testerId])
+  @@index([startedAt])
+  @@map("session_records")
+}
+
+model Feedback {
+  id                   String            @id @default(uuid()) @db.Uuid
+  appId                String            @db.Uuid
+  campaignId           String            @db.Uuid
+  testerId             String            @db.Uuid
+  rating               Int
+  comment              String
+  usefulnessScore      Int               @default(0)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  // Relations
+  app                  App               @relation(fields: [appId], references: [id], onDelete: Restrict)
+  campaign             Campaign          @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  tester               User              @relation("UserFeedbacks", fields: [testerId], references: [id], onDelete: Restrict)
+
+  @@index([appId])
+  @@index([campaignId])
+  @@index([testerId])
+  @@map("feedbacks")
+}
+
+model BugReport {
+  id                   String            @id @default(uuid()) @db.Uuid
+  appId                String            @db.Uuid
+  campaignId           String            @db.Uuid
+  testerId             String            @db.Uuid
+  title                String
+  description          String
+  stepsToReproduce     String
+  deviceModel          String?
+  osVersion            String?
+  logs                 String?
+  isValidated          Boolean           @default(false)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  // Relations
+  app                  App               @relation(fields: [appId], references: [id], onDelete: Restrict)
+  campaign             Campaign          @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  tester               User              @relation("UserBugReports", fields: [testerId], references: [id], onDelete: Restrict)
+
+  @@index([appId])
+  @@index([campaignId])
+  @@index([testerId])
+  @@map("bug_reports")
+}
+
+model Reward {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String            @db.Uuid
+  type                 RewardType
+  amount               Int
+  source               RewardSource
+  sourceId             String
+  idempotencyKey       String            @unique
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  user                 User              @relation("UserRewards", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, source, sourceId])
+  @@index([userId])
+  @@index([type])
+  @@index([source])
+  @@map("rewards")
+}
+
+model AuditLog {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String?           @db.Uuid
+  campaignId           String?           @db.Uuid
+  action               AuditAction
+  entityName           String
+  entityId             String
+  changes              Json?
+  ipAddress            String?
+  userAgent            String?
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  user                 User?             @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  campaign             Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([campaignId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model TesterReport {
+  id                      String                  @id @default(uuid()) @db.Uuid
+  campaignId              String                  @db.Uuid
+  appId                   String                  @db.Uuid
+  testerId                String                  @db.Uuid
+  missionId               String?                 @db.Uuid
+  clusterId               String?                 @db.Uuid
+  title                   String
+  description             String
+  category                ReportCategory          @default(FUNCTIONAL)
+  severity                ReportSeverity          @default(MEDIUM)
+  status                  ReportStatus            @default(SUBMITTED)
+  developerDecision       DeveloperReportDecision?
+  developerDecisionReason String?
+  developerId             String?                 @db.Uuid
+  evidenceIds             String[]                @default([])
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  resolvedAt              DateTime?
+
+  // Relations
+  app                     App                     @relation(fields: [appId], references: [id], onDelete: Restrict)
+  campaign                Campaign                @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  tester                  User                    @relation("TesterReports", fields: [testerId], references: [id], onDelete: Restrict)
+  developer               User?                   @relation("DeveloperReviewedReports", fields: [developerId], references: [id], onDelete: SetNull)
+  mission                 Mission?                @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  cluster                 ReportCluster?          @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  aiReviews               AiReview[]
+
+  @@index([appId])
+  @@index([campaignId])
+  @@index([testerId])
+  @@index([clusterId])
+  @@index([status])
+  @@index([category])
+  @@index([severity])
+  @@map("tester_reports")
+}
+
+model ReportCluster {
+  id               String              @id @default(uuid()) @db.Uuid
+  campaignId       String              @db.Uuid
+  appId            String              @db.Uuid
+  fingerprint      String              @unique
+  status           ReportClusterStatus @default(OPEN)
+  reportCount      Int                 @default(1)
+  firstReportedAt  DateTime            @default(now())
+  lastReportedAt   DateTime            @default(now())
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  // Relations
+  app              App                 @relation(fields: [appId], references: [id], onDelete: Restrict)
+  campaign         Campaign            @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  reports          TesterReport[]
+  aiReviews        AiReview[]
+
+  @@index([appId])
+  @@index([campaignId])
+  @@index([fingerprint])
+  @@index([status])
+  @@map("report_clusters")
+}
+
+model AiReview {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  clusterId            String                 @db.Uuid
+  reportId             String?                @db.Uuid
+  aiReviewKey          String                 @unique
+  provider             String                 @default("google-gemini")
+  model                String
+  policyVersion        String                 @default("1.0.0")
+  classification       AiReportClassification
+  confidence           Float
+  severityAssessment   ReportSeverity?
+  evidenceConsistency String?
+  duplicateLikelihood  Float?
+  reasoningSummary     String
+  recommendedAction    AiRecommendedAction    @default(HUMAN_REVIEW)
+  latencyMs            Int                    @default(0)
+  success              Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+
+  // Relations
+  cluster              ReportCluster          @relation(fields: [clusterId], references: [id], onDelete: Restrict)
+  report               TesterReport?          @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([clusterId])
+  @@index([reportId])
+  @@index([aiReviewKey])
+  @@index([classification])
+  @@map("ai_reviews")
+}
+

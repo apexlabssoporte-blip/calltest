@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: calltest-api
+    env: docker
+    dockerfilePath: ./infrastructure/docker/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: HOST
+        value: 0.0.0.0
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: calltest-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: INTERNAL_SERVICE_KEY
+        value: calltest-internal-secure-service-key-v1
+      - key: INTERNAL_SERVICE_SECRET
+        value: calltest-internal-secure-service-secret-v1
+      - key: CAMPAIGN_TARGET_TESTERS
+        value: "12"
+      - key: CAMPAIGN_MAX_TESTERS
+        value: "15"
+      - key: CAMPAIGN_DURATION_DAYS
+        value: "14"
+
+databases:
+  - name: calltest-db
+    plan: free
+    databaseName: calltest_prod
+    user: calltest

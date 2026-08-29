@@ -1,0 +1,1162 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CallTest API",
+    "version": "1.0.0",
+    "description": "CallTest V1 Modular Monolith REST API Contract - Phase 8 Installation, Evidence & Participation Verification"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "summary": "Liveness Probe",
+        "description": "Returns 200 OK if process is alive",
+        "responses": {
+          "200": { "description": "Process is alive" }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness Probe",
+        "description": "Checks connectivity to PostgreSQL and Redis",
+        "responses": {
+          "200": { "description": "All infrastructure services are healthy" },
+          "503": { "description": "One or more infrastructure services are unhealthy" }
+        }
+      }
+    },
+    "/health/startup": {
+      "get": {
+        "summary": "Startup Probe",
+        "description": "Verifies that server initialization and startup routines are complete",
+        "responses": {
+          "200": { "description": "Server initialization complete and ready to serve" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user account",
+        "responses": {
+          "201": { "description": "User created successfully with access and refresh tokens" },
+          "400": { "description": "Validation error" },
+          "409": { "description": "User already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Authenticate user and issue tokens",
+        "responses": {
+          "200": { "description": "Successful authentication" },
+          "401": { "description": "Invalid email or password" },
+          "403": { "description": "Account suspended or banned" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Rotate refresh token and issue new access token",
+        "responses": {
+          "200": { "description": "Token rotated successfully" },
+          "401": { "description": "Invalid or revoked refresh token" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Revoke refresh token and log out",
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current authenticated user profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current user profile" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/apps": {
+      "post": {
+        "tags": ["Apps"],
+        "summary": "Register a new application",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "App registered successfully" },
+          "400": { "description": "Invalid package name format" },
+          "409": { "description": "Duplicate active package name for this developer" }
+        }
+      },
+      "get": {
+        "tags": ["Apps"],
+        "summary": "List applications owned by current developer",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of applications" }
+        }
+      }
+    },
+    "/apps/{id}": {
+      "get": {
+        "tags": ["Apps"],
+        "summary": "Get application details by ID",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "App details" },
+          "403": { "description": "Forbidden - IDOR protection" },
+          "404": { "description": "App not found" }
+        }
+      },
+      "patch": {
+        "tags": ["Apps"],
+        "summary": "Update application details",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "App updated successfully" },
+          "403": { "description": "Forbidden - IDOR protection" },
+          "404": { "description": "App not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Apps"],
+        "summary": "Archive application (soft delete)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "App archived successfully" },
+          "403": { "description": "Forbidden - IDOR protection" },
+          "404": { "description": "App not found" }
+        }
+      }
+    },
+    "/apps/{id}/sdk-status": {
+      "patch": {
+        "tags": ["Apps"],
+        "summary": "Update SDK integration choice (SDK_ENABLED vs NO_SDK)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "SDK status updated successfully" },
+          "403": { "description": "Forbidden - Developer ownership required" },
+          "404": { "description": "App not found" }
+        }
+      }
+    },
+    "/apps/{appId}/campaigns": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Create a new testing campaign for an application",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Campaign created in DRAFT status" },
+          "400": { "description": "Invalid campaign configuration" },
+          "403": { "description": "Forbidden - App ownership verification" }
+        }
+      },
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "List all campaigns for an application",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of campaigns" }
+        }
+      }
+    },
+    "/campaigns/{id}": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Get campaign details by ID",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Campaign details" },
+          "403": { "description": "Forbidden - IDOR protection" },
+          "404": { "description": "Campaign not found" }
+        }
+      },
+      "patch": {
+        "tags": ["Campaigns"],
+        "summary": "Update campaign configuration",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Campaign updated" },
+          "400": { "description": "Cannot modify completed/cancelled campaign" }
+        }
+      }
+    },
+    "/campaigns/{id}/transition": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Execute a validated status transition on a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Transition completed" },
+          "400": { "description": "Invalid state transition" },
+          "403": { "description": "Forbidden - Admin required for suspended reactivation" }
+        }
+      }
+    },
+    "/campaigns/{id}/dashboard": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Get comprehensive operational dashboard for a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Operational dashboard metrics" },
+          "403": { "description": "Forbidden - Ownership required" },
+          "404": { "description": "Campaign not found" }
+        }
+      }
+    },
+    "/campaigns/{id}/readiness": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Check campaign activation readiness criteria",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Readiness evaluation result" },
+          "403": { "description": "Forbidden - Ownership required" },
+          "404": { "description": "Campaign not found" }
+        }
+      }
+    },
+    "/campaigns/{id}/validate-links": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Execute automated validation on Play Store and Google Group URLs",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Store and group validation results" },
+          "403": { "description": "Forbidden - Ownership required" }
+        }
+      }
+    },
+    "/campaigns/{id}/confirm-links-test": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Developer manual confirmation of device link testing",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Link test confirmed" },
+          "403": { "description": "Forbidden - Ownership required" }
+        }
+      }
+    },
+    "/campaigns/{id}/complete": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Gracefully complete campaign testing and archive active sessions",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Campaign completed successfully" },
+          "400": { "description": "Cannot complete campaign in current status" },
+          "403": { "description": "Forbidden - Ownership required" }
+        }
+      }
+    },
+    "/campaigns/available": {
+      "get": {
+        "tags": ["CampaignTesters"],
+        "summary": "List eligible campaigns available for tester discovery and enrollment",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of available campaigns" }
+        }
+      }
+    },
+    "/me/campaigns": {
+      "get": {
+        "tags": ["CampaignTesters"],
+        "summary": "List all campaigns in which the authenticated tester participates",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of tester participations" }
+        }
+      }
+    },
+    "/me/campaigns/{campaignId}": {
+      "get": {
+        "tags": ["CampaignTesters"],
+        "summary": "Get comprehensive participation and mission detail for tester in a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Tester participation details" },
+          "404": { "description": "Participation not found" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/join": {
+      "post": {
+        "tags": ["CampaignTesters"],
+        "summary": "Tester joins an eligible closed testing campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Tester enrolled in campaign" },
+          "400": { "description": "Self testing not allowed or campaign full" },
+          "409": { "description": "Already participating in campaign" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/testers": {
+      "get": {
+        "tags": ["CampaignTesters"],
+        "summary": "List testers participating in a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of campaign testers" }
+        }
+      },
+      "post": {
+        "tags": ["CampaignTesters"],
+        "summary": "Add a tester to a campaign (Administrative assignment)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Tester assigned to campaign" },
+          "400": { "description": "Max active testers (15) exceeded or invalid user role" },
+          "409": { "description": "User already has active participation in this campaign" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/testers/{testerId}": {
+      "get": {
+        "tags": ["CampaignTesters"],
+        "summary": "Get single tester participation details in a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Tester participation details" }
+        }
+      },
+      "delete": {
+        "tags": ["CampaignTesters"],
+        "summary": "Remove a tester from a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Tester removed from campaign" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/testers/{testerId}/overview": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Developer view of tester participation, completion, and activity metrics",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Sanitized tester overview" },
+          "403": { "description": "Forbidden - Developer ownership check" },
+          "404": { "description": "Tester assignment not found" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/health": {
+      "get": {
+        "tags": ["CampaignHealth"],
+        "summary": "Get real-time campaign health, risk status, and replacement needs",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Campaign health metrics" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/missions": {
+      "post": {
+        "tags": ["Missions"],
+        "summary": "Create a new mission for a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Mission created in DRAFT status" },
+          "400": { "description": "Quality assessment rejection or validation error" }
+        }
+      },
+      "get": {
+        "tags": ["Missions"],
+        "summary": "List all missions in a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of missions" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/missions/generate": {
+      "post": {
+        "tags": ["Missions"],
+        "summary": "Generate mission drafts via MissionGenerator (Starts in PENDING_REVIEW)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Generated mission drafts" }
+        }
+      }
+    },
+    "/missions/{id}": {
+      "get": {
+        "tags": ["Missions"],
+        "summary": "Get mission details by ID",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Mission details" },
+          "404": { "description": "Mission not found" }
+        }
+      },
+      "patch": {
+        "tags": ["Missions"],
+        "summary": "Update mission details",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Mission updated" },
+          "400": { "description": "Quality validation error" }
+        }
+      }
+    },
+    "/missions/{id}/approve": {
+      "post": {
+        "tags": ["Missions"],
+        "summary": "Approve a mission to ACTIVE status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Mission approved" }
+        }
+      }
+    },
+    "/missions/{id}/reject": {
+      "post": {
+        "tags": ["Missions"],
+        "summary": "Reject a mission with reason",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Mission rejected" }
+        }
+      }
+    },
+    "/missions/{missionId}/start": {
+      "post": {
+        "tags": ["MissionAttempts"],
+        "summary": "Start or resume a mission attempt (Idempotent)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Attempt started" },
+          "403": { "description": "Tester not enrolled in campaign" }
+        }
+      }
+    },
+    "/mission-attempts/{id}/submit": {
+      "post": {
+        "tags": ["MissionAttempts"],
+        "summary": "Submit a mission attempt (Strictly idempotent)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Attempt submitted or auto-validated" },
+          "403": { "description": "Attempt belongs to another tester" }
+        }
+      }
+    },
+    "/campaign-testers/{testerId}/missions": {
+      "get": {
+        "tags": ["MissionAttempts"],
+        "summary": "List all mission attempts for a tester",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of mission attempts" }
+        }
+      }
+    },
+    "/mission-attempts/{id}/difficulty": {
+      "post": {
+        "tags": ["MissionFeedback"],
+        "summary": "Submit perceived difficulty rating for a completed mission",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Difficulty feedback recorded" },
+          "409": { "description": "Feedback already submitted for this mission" }
+        }
+      }
+    },
+    "/mission-attempts/{id}/quality-feedback": {
+      "post": {
+        "tags": ["MissionFeedback"],
+        "summary": "Submit qualitative feedback (TOO_COMPLEX, CONFUSING, etc.)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Quality feedback recorded" }
+        }
+      }
+    },
+    "/campaigns/install/claim": {
+      "post": {
+        "tags": ["Installation"],
+        "summary": "Claim manual installation of app without SDK (Sets INSTALL_CLAIMED)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Installation claimed successfully" },
+          "404": { "description": "Tester assignment not found" }
+        }
+      }
+    },
+    "/campaigns/install/sdk-event": {
+      "post": {
+        "tags": ["Installation"],
+        "summary": "Ingest SDK installation or first open technical telemetry",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "SDK installation event recorded" },
+          "404": { "description": "Campaign or app not found" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/install/status": {
+      "get": {
+        "tags": ["Installation"],
+        "summary": "Get current installation status for authenticated tester in a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Installation record status" }
+        }
+      }
+    },
+    "/mission-attempts/{attemptId}/evidence": {
+      "post": {
+        "tags": ["Evidence"],
+        "summary": "Upload screenshot evidence for a mission attempt",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Evidence uploaded and set to PENDING_REVIEW" },
+          "400": { "description": "Invalid format, size, or attempt already validated" },
+          "403": { "description": "Forbidden - Attempt belongs to another tester" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/evidence": {
+      "get": {
+        "tags": ["Evidence"],
+        "summary": "List all evidence submissions for a campaign (Developer view)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of campaign evidences" },
+          "403": { "description": "Forbidden - Developer ownership required" }
+        }
+      }
+    },
+    "/evidence/{id}": {
+      "get": {
+        "tags": ["Evidence"],
+        "summary": "Get specific evidence details and review status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Evidence details" },
+          "403": { "description": "Forbidden - Access denied" },
+          "404": { "description": "Evidence not found" }
+        }
+      }
+    },
+    "/evidence/{id}/approve": {
+      "post": {
+        "tags": ["Evidence"],
+        "summary": "Approve mission screenshot evidence",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Evidence approved and mission attempt marked VALIDATED" },
+          "403": { "description": "Forbidden - Developer ownership required" },
+          "404": { "description": "Evidence not found" }
+        }
+      }
+    },
+    "/evidence/{id}/reject": {
+      "post": {
+        "tags": ["Evidence"],
+        "summary": "Reject mission screenshot evidence with mandatory reason",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Evidence rejected with reason" },
+          "400": { "description": "Mandatory rejection reason missing" },
+          "403": { "description": "Forbidden - Developer ownership required" },
+          "404": { "description": "Evidence not found" }
+        }
+      }
+    },
+    "/me/campaigns/{campaignId}/evidence": {
+      "get": {
+        "tags": ["Evidence"],
+        "summary": "List authenticated tester's own evidence submissions in a campaign",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of tester evidences" }
+        }
+      }
+    },
+    "/activity/events": {
+      "post": {
+        "tags": ["Activity"],
+        "summary": "Ingest client/SDK activity event or batch (Idempotent & timestamp validated)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Events ingested" }
+        }
+      }
+    },
+    "/campaign-testers/{campaignTesterId}/activity-score": {
+      "get": {
+        "tags": ["Activity"],
+        "summary": "Get multi-signal activity score and classification for a tester",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Activity score and classification" }
+        }
+      }
+    },
+    "/me/exposure": {
+      "get": {
+        "tags": ["Matching"],
+        "summary": "Get current tester exposure level, capacity, and active load",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Tester exposure details" }
+        }
+      }
+    },
+    "/internal/matching/campaigns/{campaignId}/evaluate": {
+      "post": {
+        "tags": ["Matching"],
+        "summary": "Evaluate campaign health and execute controlled replacement matching",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Matching evaluation results" }
+        }
+      }
+    },
+    "/me/trust": {
+      "get": {
+        "tags": ["Trust"],
+        "summary": "Get current user trust profile, score, rank, and history",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current user trust details" }
+        }
+      }
+    },
+    "/me/reputation": {
+      "get": {
+        "tags": ["Trust"],
+        "summary": "Get current user reputation status and active restrictions",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current user reputation details" }
+        }
+      }
+    },
+    "/users/{userId}/trust": {
+      "get": {
+        "tags": ["Trust"],
+        "summary": "Get sanitized user trust rank and metrics for campaign developers (Privacy protected)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Sanitized developer view of user trust" },
+          "403": { "description": "Forbidden - Developer role required" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/users/{userId}/fraud": {
+      "get": {
+        "tags": ["Fraud"],
+        "summary": "Get full internal fraud signals, score, and events (Admin confidential)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Confidential internal fraud report" },
+          "403": { "description": "Forbidden - Admin role required" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get paginated user notifications with bounded limits",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Paginated list of notifications" }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get total unread notifications count",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Unread count response" }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Mark a single notification as read (IDOR protected)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Notification marked as read" },
+          "404": { "description": "Notification not found or access denied" }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Mark all unread notifications as read",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "All notifications marked as read" }
+        }
+      }
+    },
+    "/notifications/preferences": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get user notification preferences",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Notification preferences" }
+        }
+      },
+      "patch": {
+        "tags": ["Notifications"],
+        "summary": "Update user notification preferences",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Updated notification preferences" }
+        }
+      }
+    },
+    "/notifications/device-token": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Register client device push token securely",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Device push token registered" }
+        }
+      }
+    },
+    "/me/rewards": {
+      "get": {
+        "tags": ["Rewards"],
+        "summary": "Get current user reward profile, total XP, total Gold, and summary",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current user reward summary and balance" }
+        }
+      }
+    },
+    "/me/rewards/history": {
+      "get": {
+        "tags": ["Rewards"],
+        "summary": "Get paginated reward ledger history for the current user",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "campaignId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "sourceType", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated list of reward ledger items" }
+        }
+      }
+    },
+    "/me/account": {
+      "delete": {
+        "tags": ["Auth", "Privacy"],
+        "summary": "Delete user account and anonymize PII for privacy compliance",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Account deleted and PII anonymized" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Search and list users with administrative filters",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "role", "in": "query", "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated user list" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/users/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get sanitized comprehensive user profile for admin inspection",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User detailed profile" },
+          "403": { "description": "Forbidden - Admin role required" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/admin/users/{id}/suspend": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Suspend a user account with mandatory reason and audit log",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User suspended" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/users/{id}/unsuspend": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Unsuspend a user account and restore to active status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User unsuspended" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/users/{id}/ban": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Ban a user account with mandatory reason and audit log",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User banned" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/users/{id}/unban": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Unban a user account and restore to active status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User unbanned" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/evidence/pending": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List all pending evidence across campaigns for admin review",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of pending evidence" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/evidence/{id}/approve": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Approve mission screenshot evidence with admin privileges",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Evidence approved" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/evidence/{id}/reject": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Reject mission screenshot evidence with mandatory reason",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Evidence rejected" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/reviews": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create an operational dispute or review ticket",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Review ticket created" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/reviews/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get operational review ticket by ID",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Review ticket details" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      },
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update or resolve an operational review ticket",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Review ticket updated" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/campaigns/{campaignId}/reports": {
+      "post": {
+        "tags": ["Reports"],
+        "summary": "Submit a bug report for an active campaign",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "campaignId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "201": { "description": "Report submitted successfully" },
+          "403": { "description": "Forbidden - Active enrollment required" }
+        }
+      },
+      "get": {
+        "tags": ["Reports"],
+        "summary": "List all tester reports for a campaign (Developer view)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "campaignId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "List of campaign reports" },
+          "403": { "description": "Forbidden - Developer of application required" }
+        }
+      }
+    },
+    "/reports/{id}": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get report details by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Report details" },
+          "403": { "description": "Forbidden - Access denied" }
+        }
+      }
+    },
+    "/reports/{id}/developer-review": {
+      "post": {
+        "tags": ["Reports"],
+        "summary": "Developer reviews and evaluates a tester report",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Report evaluated" },
+          "403": { "description": "Forbidden - Developer only" }
+        }
+      }
+    },
+    "/reports/{id}/escalate": {
+      "post": {
+        "tags": ["Reports"],
+        "summary": "Escalate a report for AI second opinion and human review",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Report escalated" }
+        }
+      }
+    },
+    "/reports/{id}/ai-review": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get AI structured second opinion review for a report",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "AI review details" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/admin/reports/pending": {
+      "get": {
+        "tags": ["Admin Reports"],
+        "summary": "List all pending escalated reports for admin human review",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of pending reports" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/report-clusters": {
+      "get": {
+        "tags": ["Admin Reports"],
+        "summary": "List all report clusters across campaigns",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of report clusters" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/admin/reports/{id}/finalize": {
+      "post": {
+        "tags": ["Admin Reports"],
+        "summary": "Admin human final decision on escalated report",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Report decision finalized" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/campaigns/{id}/end-early": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "End campaign early when app is verified publicly available on Google Play",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Campaign ended early and testers credited without penalty" },
+          "400": { "description": "Campaign not in active testing status" },
+          "403": { "description": "Forbidden - Developer ownership required" }
+        }
+      }
+    },
+    "/me/tester-dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get authenticated tester dashboard overview (active campaigns, pending missions, reliability, capacity)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Tester dashboard summary" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/campaigns/{id}/developer-dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get developer campaign dashboard overview (12/15 testers, 3 backups, day X/14, aggregated reliability, zero PII)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Developer dashboard summary" },
+          "403": { "description": "Forbidden - Developer ownership required" }
+        }
+      }
+    },
+    "/missions/today": {
+      "get": {
+        "tags": ["Missions"],
+        "summary": "Get aggregated daily missions inbox across all active campaigns for the authenticated tester",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Daily missions inbox summary grouped in Pending, Completed, and Upcoming tabs" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/me/missions/today": {
+      "get": {
+        "tags": ["Missions"],
+        "summary": "Get aggregated daily missions inbox (alias for /missions/today)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Daily missions inbox summary" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/availability-reports": {
+      "post": {
+        "tags": ["Availability"],
+        "summary": "Submit a regional availability or installation issue report",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Availability report created or grouped successfully" },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/availability-reports/{id}": {
+      "get": {
+        "tags": ["Availability"],
+        "summary": "Get specific availability report details and evidence",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Availability report details" },
+          "404": { "description": "Report not found" }
+        }
+      }
+    },
+    "/availability-reports/{id}/evidence": {
+      "post": {
+        "tags": ["Availability"],
+        "summary": "Submit developer Google Play Console evidence for an availability report",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "201": { "description": "Evidence submitted successfully" },
+          "403": { "description": "Forbidden - Developer ownership required" }
+        }
+      }
+    },
+    "/availability-reports/{id}/resolve": {
+      "post": {
+        "tags": ["Availability"],
+        "summary": "Resolve an availability conflict (AVAILABLE, RESTRICTED, UNVERIFIED, DISMISSED)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Report resolved successfully" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    }
+  }
+}

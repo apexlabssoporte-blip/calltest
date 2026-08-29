@@ -1,0 +1,53 @@
+# Node
+node_modules/
+dist/
+build/
+.npm/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing
+coverage/
+.nyc_output/
+
+# Prisma
+/apps/backend/prisma/*.db
+/apps/backend/prisma/*.db-journal
+
+# Android
+.gradle/
+build/
+app/build/
+sdk/build/
+*.iml
+local.properties
+.cxx/
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.navigation/
+assetpackdownloadcache/
+
+# Docker
+docker/data/
+postgres-data/
+redis-data/
