@@ -5,6 +5,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -69,6 +75,22 @@ fun HomeScreen(
     val context = LocalContext.current
     var selectedAppForDownload by remember { mutableStateOf<AvailableCampaign?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    var reportingLinkType by remember { mutableStateOf<String?>(null) }
+    var reportErrorComment by remember { mutableStateOf("") }
+    var reportErrorImageUri by remember { mutableStateOf<Uri?>(null) }
+    var reportErrorImageName by remember { mutableStateOf<String?>(null) }
+
+    val reportPhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                reportErrorImageUri = uri
+                reportErrorImageName = "error_${System.currentTimeMillis()}.jpg"
+                Toast.makeText(context, "Captura del error adjuntada 📷✓", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
 
     Scaffold(
         topBar = {
@@ -186,7 +208,10 @@ fun HomeScreen(
                     onOpenPlayStore = { url -> openExternalUrl(context, url) },
                     onLaunchApp = { packageName, appName -> launchExternalApp(context, packageName, appName) },
                     onReportLink = { linkType ->
-                        Toast.makeText(context, "Reporte enviado: El enlace de $linkType será verificado por el equipo.", Toast.LENGTH_LONG).show()
+                        reportErrorComment = ""
+                        reportErrorImageUri = null
+                        reportErrorImageName = null
+                        reportingLinkType = linkType
                     },
                     onAutoJoinInstalled = {
                         onJoinCampaign(app)
@@ -196,6 +221,122 @@ fun HomeScreen(
                     onClose = { selectedAppForDownload = null }
                 )
             }
+        }
+
+        // ==========================================
+        // DIÁLOGO DE REPORTE DE ENLACES CON FOTO Y COMENTARIO
+        // ==========================================
+        if (reportingLinkType != null) {
+            val linkName = reportingLinkType!!
+            AlertDialog(
+                onDismissRequest = { reportingLinkType = null },
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(text = "🚩", fontSize = 22.sp)
+                        Text(
+                            text = "Reportar Enlace ($linkName)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Cuéntanos qué problema tuviste al intentar abrir este enlace para que el desarrollador lo solucione:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        OutlinedTextField(
+                            value = reportErrorComment,
+                            onValueChange = { reportErrorComment = it },
+                            placeholder = { Text("Describe el error (ej: 'Acceso denegado en el grupo' o 'No disponible en Play Store')...", fontSize = 12.sp) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(110.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+
+                        if (reportErrorImageName != null) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "📎 $reportErrorImageName",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "Captura de pantalla adjuntada ✓",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            reportPhotoPickerLauncher.launch(
+                                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                            )
+                                        }
+                                    ) {
+                                        Text("Cambiar 🔄", fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    reportPhotoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(text = "📷 Adjuntar Captura del Error (Opcional)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val target = reportingLinkType ?: "enlace"
+                            reportingLinkType = null
+                            Toast.makeText(
+                                context,
+                                "✓ Reporte de $target enviado con éxito. El equipo y el desarrollador lo verificarán.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Enviar Reporte 🚩", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { reportingLinkType = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }

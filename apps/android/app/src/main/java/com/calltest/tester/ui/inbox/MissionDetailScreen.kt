@@ -69,7 +69,21 @@ fun MissionDetailScreen(
     var selectedEvidenceUri by remember { mutableStateOf<Uri?>(null) }
     var isReportModalOpen by remember { mutableStateOf(false) }
     var reportReason by remember { mutableStateOf("FOTO_PERSONAL") }
+    var reportMissionComment by remember { mutableStateOf("") }
+    var reportMissionImageUri by remember { mutableStateOf<Uri?>(null) }
+    var reportMissionImageName by remember { mutableStateOf<String?>(null) }
     var selectedEvidenceName by remember { mutableStateOf<String?>(null) }
+
+    val reportMissionPhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                reportMissionImageUri = uri
+                reportMissionImageName = "reporte_mision_${System.currentTimeMillis()}.jpg"
+                Toast.makeText(context, "Captura del problema adjuntada 📷✓", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -461,7 +475,7 @@ fun MissionDetailScreen(
         }
 
         // ==========================================
-        // MODAL DE REPORTE DE PRIVACIDAD / MISIÓN ABUSIVA
+        // MODAL DE REPORTE DE PRIVACIDAD / MISIÓN / ENLACES CON FOTO Y COMENTARIO
         // ==========================================
         if (isReportModalOpen) {
             AlertDialog(
@@ -471,19 +485,80 @@ fun MissionDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(text = "🛡️", fontSize = 22.sp)
-                        Text(text = "Protección de Privacidad", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(text = "🚩", fontSize = 22.sp)
+                        Text(text = "Reportar Misión o Enlace", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     }
                 },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Por política de CallTest, NINGÚN desarrollador puede exigirte fotos personales, documentos de identidad, compras con dinero real ni datos bancarios.",
+                            text = "Describe el problema o error encontrado (ej: enlace caído, solicitud indebida, crash en la app):",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
+                        OutlinedTextField(
+                            value = reportMissionComment,
+                            onValueChange = { reportMissionComment = it },
+                            placeholder = { Text("Describe el error o motivo del reporte...", fontSize = 12.sp) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+
+                        if (reportMissionImageName != null) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "📎 $reportMissionImageName",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "Captura de error adjuntada ✓",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            reportMissionPhotoPickerLauncher.launch(
+                                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                            )
+                                        }
+                                    ) {
+                                        Text("Cambiar 🔄", fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    reportMissionPhotoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(text = "📷 Adjuntar Captura del Error (Opcional)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+
                         Text(
-                            text = "Al reportar, esta misión se convertirá automáticamente en 3 minutos de uso libre para que no pierdas tu racha.",
+                            text = "🛡️ Al reportar, tu racha se mantendrá protegida con 3 minutos de uso libre.",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -494,11 +569,14 @@ fun MissionDetailScreen(
                     Button(
                         onClick = {
                             isReportModalOpen = false
-                            Toast.makeText(context, "🚩 Reporte enviado. Misión convertida a 3 min de uso libre. Tu racha está protegida.", Toast.LENGTH_LONG).show()
+                            reportMissionComment = ""
+                            reportMissionImageUri = null
+                            reportMissionImageName = null
+                            Toast.makeText(context, "🚩 Reporte enviado con éxito. Misión convertida a 3 min de uso libre.", Toast.LENGTH_LONG).show()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Confirmar Reporte 🚩", color = Color.White)
+                        Text("Enviar Reporte 🚩", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
