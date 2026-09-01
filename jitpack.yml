@@ -1,4 +1,7 @@
 jdk:
   - openjdk17
 before_install:
-  - chmod +x ./gradlew
+  - chmod +x ./apps/android/gradlew
+install:
+  - cd apps/android && ./gradlew :sdk:assembleRelease :sdk:publishToMavenLocal
+
