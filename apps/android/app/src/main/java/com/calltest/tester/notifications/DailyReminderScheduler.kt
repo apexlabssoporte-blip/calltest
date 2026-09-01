@@ -45,19 +45,19 @@ object DailyReminderScheduler {
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
+                alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     calendar.timeInMillis,
                     pendingIntent
                 )
             } else {
-                alarmManager.setExact(
+                alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
                     calendar.timeInMillis,
                     pendingIntent
                 )
             }
-        } catch (_: SecurityException) {
+        } catch (_: Exception) {
             alarmManager.set(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,

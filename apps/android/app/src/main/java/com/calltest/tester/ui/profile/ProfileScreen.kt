@@ -20,10 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,7 +33,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.material3.CircularProgressIndicator
+import com.calltest.tester.data.network.CallTestApiClient
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,6 +75,10 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val strings = LocalAppStrings.current
+    val scope = rememberCoroutineScope()
+    var isDeleteStep1Open by remember { mutableStateOf(false) }
+    var isDeleteStep2Open by remember { mutableStateOf(false) }
+    var isDeletingAccount by remember { mutableStateOf(false) }
     val currentLang = LocalAppLanguage.current
 
     Scaffold(
@@ -450,8 +461,8 @@ fun ProfileScreen(
                 onClick = onLogout,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.error
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -461,7 +472,149 @@ fun ProfileScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ==========================================
+            // SECCIÓN OBLIGATORIA: ELIMINACIÓN DE CUENTA
+            // ==========================================
+            OutlinedButton(
+                onClick = { isDeleteStep1Open = true },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                enabled = !isDeletingAccount,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isDeletingAccount) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Eliminando cuenta...")
+                } else {
+                    Text(
+                        text = "🗑️ Eliminar mi Cuenta Definitivamente",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
+
+            // DIÁLOGO PASO 1: EXPLICACIÓN DE IRREVERSIBILIDAD Y ANONIMIZACIÓN
+            if (isDeleteStep1Open) {
+                AlertDialog(
+                    onDismissRequest = { if (!isDeletingAccount) isDeleteStep1Open = false },
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(text = "⚠️", fontSize = 24.sp)
+                            Text(
+                                text = "¿Eliminar tu cuenta?",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "Esta acción es definitiva e irreversible:",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "• Tu correo, credenciales y perfil personal serán eliminados de nuestros servidores.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "• Tus campañas y datos de participación serán desvinculados y anonimizados.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "• Perderás todas tus rachas, niveles y evaluadores asignados.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                isDeleteStep1Open = false
+                                isDeleteStep2Open = true
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Continuar a Confirmación", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { isDeleteStep1Open = false }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+
+            // DIÁLOGO PASO 2: CONFIRMACIÓN FINAL ESTRICTA
+            if (isDeleteStep2Open) {
+                AlertDialog(
+                    onDismissRequest = { if (!isDeletingAccount) isDeleteStep2Open = false },
+                    title = {
+                        Text(
+                            text = "🚨 Confirmación Final",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "¿Estás 100% seguro de que deseas eliminar permanentemente tu cuenta de CallTest? No podrás recuperar tu acceso ni tus datos.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                isDeletingAccount = true
+                                scope.launch {
+                                    val result = CallTestApiClient.deleteAccount(context)
+                                    isDeletingAccount = false
+                                    isDeleteStep2Open = false
+                                    if (result.isSuccess) {
+                                        Toast.makeText(context, "Tu cuenta y datos han sido eliminados.", Toast.LENGTH_LONG).show()
+                                        onLogout()
+                                    } else {
+                                        val err = result.exceptionOrNull()?.message ?: "Error desconocido"
+                                        Toast.makeText(context, "Error al eliminar: $err", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            enabled = !isDeletingAccount,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Sí, Eliminar Definitivamente", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { isDeleteStep2Open = false },
+                            enabled = !isDeletingAccount
+                        ) {
+                            Text("Volver")
+                        }
+                    }
+                )
+            }
         }
     }
 }

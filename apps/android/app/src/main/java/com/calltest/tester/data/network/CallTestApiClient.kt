@@ -204,6 +204,30 @@ object CallTestApiClient {
         }
     }
 
+    suspend fun deleteAccount(context: Context): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val token = SessionManager.getAccessToken(context)
+            if (token.isNullOrBlank()) {
+                SessionManager.clearSession(context)
+                return@withContext Result.success(true)
+            }
+            val (code, responseText) = executeHttpRequest(
+                endpoint = "/me/account",
+                method = "DELETE",
+                jsonBody = null,
+                token = token
+            )
+            if (code in 200..299 || code == 401 || code == 404) {
+                SessionManager.clearSession(context)
+                Result.success(true)
+            } else {
+                Result.failure(Exception("Error $code: $responseText"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun submitTestingSession(
         context: Context,
         campaignId: String,
