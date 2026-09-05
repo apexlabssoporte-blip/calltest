@@ -1474,7 +1474,7 @@ Please inspect my current codebase and provide the exact modified code."""
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Step Indicator Header
+        // Step Indicator Header (4 Pasos Divididos y Claros)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -1483,18 +1483,20 @@ Please inspect my current codebase and provide the exact modified code."""
             Column {
                 Text(
                     text = when (currentStep) {
-                        1 -> "Paso 1 de 3: Tu App 📱"
-                        2 -> "Paso 2 de 3: Enlaces de Google Play 🔗"
-                        else -> "Paso 3 de 3: Plan y SDK ⚡"
+                        1 -> "Paso 1 de 4: Tu App 📱"
+                        2 -> "Paso 2 de 4: Enlaces de Google Play 🔗"
+                        3 -> "Paso 3 de 4: Misiones de 14 Días 📋"
+                        else -> "Paso 4 de 4: Integración del SDK ⚡"
                     },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = when (currentStep) {
-                        1 -> "Describe tu app para autogenerar las 14 misiones"
-                        2 -> "Pega tus enlaces de Closed Beta"
-                        else -> "Revisa las misiones e integra el SDK (Opcional)"
+                        1 -> "Datos y categoría de tu aplicación"
+                        2 -> "Enlaces de tu Grupo y Google Play"
+                        3 -> "Revisa las 14 misiones diarias para tus evaluadores"
+                        else -> "Telemetría automática opcional de 3 minutos"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1503,12 +1505,12 @@ Please inspect my current codebase and provide the exact modified code."""
         }
 
         LinearProgressIndicator(
-            progress = { currentStep / 3f },
+            progress = { currentStep / 4f },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp)),
-            color = MaterialTheme.colorScheme.primary,
+            color = Color(0xFF1E88E5),
             trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
 
@@ -1553,11 +1555,27 @@ Please inspect my current codebase and provide the exact modified code."""
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(categories) { cat ->
+                    val isCatSelected = selectedCategory == cat
                     FilterChip(
-                        selected = selectedCategory == cat,
+                        selected = isCatSelected,
                         onClick = { selectedCategory = cat },
-                        label = { Text(cat) },
-                        shape = RoundedCornerShape(10.dp)
+                        label = {
+                            Text(
+                                text = if (isCatSelected) "✓ $cat" else cat,
+                                fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isCatSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFF1E88E5), // Azul vibrante claramente visible
+                            selectedLabelColor = Color.White
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isCatSelected,
+                            borderColor = if (isCatSelected) Color(0xFF1565C0) else MaterialTheme.colorScheme.outline
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             }
@@ -1671,138 +1689,30 @@ Please inspect my current codebase and provide the exact modified code."""
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1.5f)
                 ) {
-                    Text(text = "Generar Plan ⚡", fontWeight = FontWeight.Bold)
+                    Text(text = "Ver Misiones ➔", fontWeight = FontWeight.Bold)
                 }
             }
         }
 
         // ==========================================
-        // CONTENIDO DEL PASO 3 (REDISEÑADO LIMPIO)
+        // CONTENIDO DEL PASO 3: MISIONES DE 14 DÍAS (SOLO MISIONES)
         // ==========================================
         else if (currentStep == 3) {
-            // 1. Tarjeta Limpia de Beneficios del SDK
-            Card(
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(text = "⚡", fontSize = 24.sp)
-                        Column {
-                            Text(text = "SDK de Telemetría (Muy Recomendado)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Text(text = "Mide los 3 min/día automáticamente en los 12 celulares sin capturas.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Comparativa Limpia
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Text(text = "⚡ CON SDK", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "• 100% Automático\n• +95% Retención\n• Salud 98/100 Play Store", fontSize = 11.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            }
-                        }
-
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Text(text = "📷 SIN SDK", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "• Capturas diarias\n• Riesgo de abandono\n• Validación manual", fontSize = 11.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Bloque 1: Gradle con botón Copiar
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = "// build.gradle.kts:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(text = "implementation(\"com.github.calltest:sdk:1.0.0\")", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    clipboardManager.setText(AnnotatedString("implementation(\"com.github.calltest:sdk:1.0.0\")"))
-                                    Toast.makeText(context, "Línea Gradle copiada 📋", Toast.LENGTH_SHORT).show()
-                                },
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text("Copiar", fontSize = 11.sp)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Bloque 2: Application.onCreate() con botón Copiar
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = "// Application.onCreate():", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(text = "CallTestSdk.install(this, \"API_KEY\")", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    clipboardManager.setText(AnnotatedString("CallTestSdk.install(this, \"API_KEY\")"))
-                                    Toast.makeText(context, "Línea Application copiada 📋", Toast.LENGTH_SHORT).show()
-                                },
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text("Copiar", fontSize = 11.sp)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Botón para abrir el Modal de Prompt para IA
-                    Button(
-                        onClick = { isAiPromptModalOpen = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "🤖 Ver Prompt para IA (Cursor / Claude / ChatGPT)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onTertiary, fontSize = 12.sp)
-                    }
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Calendario de 14 Días para tus Testers 📋",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Misiones guiadas autogeneradas para que tus 12 evaluadores exploren tu app diariamente:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 2. Calendario de 14 Misiones
-            Text(text = "Calendario de Misiones para tus Testers:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
 
             generatedMissions.forEachIndexed { index, mission ->
                 val isFirstMission = index == 0
@@ -1826,7 +1736,7 @@ Please inspect my current codebase and provide the exact modified code."""
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Surface(
-                            color = if (isFirstMission) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
+                            color = if (isFirstMission) MaterialTheme.colorScheme.outline else Color(0xFF1E88E5),
                             shape = CircleShape,
                             modifier = Modifier.size(28.dp)
                         ) {
@@ -1864,12 +1774,150 @@ Please inspect my current codebase and provide the exact modified code."""
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = { currentStep = 2 }, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f)) {
+                    Text(text = "← Enlaces")
+                }
+                Button(
+                    onClick = { currentStep = 4 },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1.5f)
+                ) {
+                    Text(text = "Siguiente: SDK ➔", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // ==========================================
+        // CONTENIDO DEL PASO 4: SDK Y BENEFICIOS (VENTANA DEDICADA)
+        // ==========================================
+        else if (currentStep == 4) {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(text = "⚡", fontSize = 24.sp)
+                        Column {
+                            Text(text = "SDK de Telemetría (Muy Recomendado)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1E88E5))
+                            Text(text = "Mide los 3 min/día automáticamente en los 12 celulares sin pedir capturas.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Comparativa Limpia
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(text = "⚡ CON SDK", fontWeight = FontWeight.Black, color = Color(0xFF1E88E5), fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "• 100% Automático\n• +95% Retención\n• Salud 98/100 Play Store", fontSize = 11.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            }
+                        }
+
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(text = "📷 SIN SDK", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "• Capturas diarias\n• Riesgo de abandono\n• Validación manual", fontSize = 11.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Bloque 1: Gradle con botón Copiar
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = "// build.gradle.kts:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = "implementation(\"com.github.calltest:sdk:1.0.0\")", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E88E5))
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString("implementation(\"com.github.calltest:sdk:1.0.0\")"))
+                                    Toast.makeText(context, "Línea Gradle copiada 📋", Toast.LENGTH_SHORT).show()
+                                },
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Copiar", fontSize = 11.sp)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Bloque 2: Application.onCreate() con botón Copiar
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = "// Application.onCreate():", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = "CallTestSdk.install(this, \"API_KEY\")", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E88E5))
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString("CallTestSdk.install(this, \"API_KEY\")"))
+                                    Toast.makeText(context, "Línea Application copiada 📋", Toast.LENGTH_SHORT).show()
+                                },
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Copiar", fontSize = 11.sp)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Botón para abrir el Modal de Prompt para IA
+                    Button(
+                        onClick = { isAiPromptModalOpen = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "🤖 Ver Prompt para IA (Cursor / Claude / ChatGPT)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onTertiary, fontSize = 12.sp)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             val ownTesters = ownTestersCount.toIntOrNull() ?: 0
             val pkg = autoExtractedPackageName ?: if (appName.isNotBlank()) "com.ejemplo.${appName.lowercase().filter { it.isLetterOrDigit() }}" else "com.ejemplo.app"
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = { currentStep = 2 }, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f)) {
-                    Text(text = "← Enlaces")
+                OutlinedButton(onClick = { currentStep = 3 }, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f)) {
+                    Text(text = "← Misiones")
                 }
                 Button(
                     onClick = {
