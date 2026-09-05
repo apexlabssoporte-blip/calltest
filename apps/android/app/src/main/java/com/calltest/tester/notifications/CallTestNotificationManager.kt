@@ -483,6 +483,36 @@ object CallTestNotificationManager {
         } catch (_: SecurityException) {}
     }
 
+    /**
+     * Notificación cuando el desarrollador desbloquea un tester de respaldo (#13, #14 o #15)
+     * y se le asigna una nueva app recomendada para probar por reciprocidad.
+     */
+    fun sendBackupTesterUnlockedWithAppNotification(
+        context: Context,
+        testerNumber: Int = 13,
+        recommendedAppName: String = "Habit Hero Daily"
+    ) {
+        createNotificationChannels(context)
+        val pendingIntent = getMainActivityPendingIntent(context)
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("🛡️ ¡Tester de Respaldo #$testerNumber Desbloqueado!")
+            .setContentText("Tienes una nueva app lista ($recommendedAppName). Descárgala para activar tu beneficio.")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("¡Felicidades por tu racha! Se ha asignado el Tester #$testerNumber a tu aplicación. Por reciprocidad comunitaria, tienes una nueva app recomendada ($recommendedAppName) lista para probar 3 min/día en la pestaña Inicio.")
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        try {
+            NotificationManagerCompat.from(context).notify(NOTIF_ID_SLOT_UNLOCKED + testerNumber, notification)
+        } catch (_: SecurityException) {}
+    }
+
     fun sendTestNotification(context: Context) {
         createNotificationChannels(context)
         val pendingIntent = getMainActivityPendingIntent(context)
