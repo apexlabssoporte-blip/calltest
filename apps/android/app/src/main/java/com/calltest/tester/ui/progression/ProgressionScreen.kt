@@ -221,7 +221,18 @@ fun ProgressionScreen(
                             ) {
                                 Text(text = "⚡", fontSize = 16.sp)
                                 Text(
-                                    text = "Reclutamiento Instantáneo de tus 12 Testers (<5 min)",
+                                    text = "Asignación Preferencial en Cola Prioritaria de Testers",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(text = "🏅", fontSize = 16.sp)
+                                Text(
+                                    text = "Medalla 'Tester de Oro 14/14' al completar una app",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -232,7 +243,7 @@ fun ProgressionScreen(
                             ) {
                                 Text(text = "🛡️", fontSize = 16.sp)
                                 Text(
-                                    text = "Tester de Respaldo #13 desbloqueado desde el Día 1",
+                                    text = "Evaluadores de Oro Cruzados asignados a tu futura app",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )

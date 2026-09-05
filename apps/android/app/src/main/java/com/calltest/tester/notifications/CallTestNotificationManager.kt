@@ -513,6 +513,34 @@ object CallTestNotificationManager {
         } catch (_: SecurityException) {}
     }
 
+    /**
+     * Notificación de felicitación al tester por completar las 14/14 misiones de una app
+     */
+    fun sendGoldTesterCelebrationNotification(
+        context: Context,
+        appName: String = "Fintech Tracker"
+    ) {
+        createNotificationChannels(context)
+        val pendingIntent = getMainActivityPendingIntent(context)
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("🏅 ¡Medalla de Tester de Oro Ganada!")
+            .setContentText("¡Completaste los 14 días de $appName! Ganaste Asignación Preferencial 🚀.")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("¡Enhorabuena! Has completado las 14 misiones continuas en $appName. Ganaste la insignia de Tester de Oro 14/14, +100 puntos de Karma y Asignación Preferencial para cuando publiques tu app.")
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        try {
+            NotificationManagerCompat.from(context).notify(NOTIF_ID_SLOT_UNLOCKED + 50, notification)
+        } catch (_: SecurityException) {}
+    }
+
     fun sendTestNotification(context: Context) {
         createNotificationChannels(context)
         val pendingIntent = getMainActivityPendingIntent(context)
