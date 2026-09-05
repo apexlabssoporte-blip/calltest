@@ -1308,7 +1308,7 @@ fun MyAppScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "Google Play exige 12 evaluadores activos durante 14 días. Para que nunca te falte ninguno, CallTest te asigna evaluadores de respaldo según tu racha:",
+                            text = "Google Play exige 12 evaluadores activos durante 14 días. Para blindar tu aplicación, CallTest te ofrece hasta 3 evaluadores de respaldo mediante la Cadena de Desbloqueo Progresivo:",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1319,8 +1319,8 @@ fun MyAppScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(text = "📅 Día 1: Base de Google Play", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                                Text(text = "• 12 Evaluadores Titulares\n• Ranura 1 de App", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = "📅 Nivel 1: Base de Google Play (Día 1)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                Text(text = "• 12 Evaluadores Titulares activos\n• Pruebas 1 app comunitaria de 3 min/día", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
 
@@ -1330,8 +1330,8 @@ fun MyAppScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(text = "🔥 Día 2 de Racha: 1er Respaldo", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                                Text(text = "• 13 Evaluadores (+1 Respaldo)\n• +1 Nueva App recomendada para probar", fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(text = "🔥 Nivel 2: Tester #13 (Día 2 de Racha)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                Text(text = "• 13 Evaluadores (+1 Respaldo)\n• 📲 Requiere: Descargar y probar App #2\n• ⚠️ Obligatorio para poder acceder a los Testers #14 y #15", fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                             }
                         }
 
@@ -1341,8 +1341,8 @@ fun MyAppScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(text = "🔥 Día 5 de Racha: 2do Respaldo", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                                Text(text = "• 14 Evaluadores (+2 Respaldos)\n• 🚀 Ranura 2 de App desbloqueada", fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(text = "🔥 Nivel 3: Tester #14 (Día 5 de Racha)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                Text(text = "• 14 Evaluadores (+2 Respaldos)\n• 📲 Requiere: Descargar y probar App #3\n• 🚀 Ranura 2 de App desbloqueada", fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                             }
                         }
 
@@ -1352,8 +1352,8 @@ fun MyAppScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(text = "👑 Día 10 de Racha: Escudo Máximo (15 Testers)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary)
-                                Text(text = "• 15 Evaluadores (+3 Respaldos)\n• 🚀 Ranura 3 de App desbloqueada", fontSize = 11.sp, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                                Text(text = "👑 Nivel 4: Escudo Máximo (Tester #15 - Día 10)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary)
+                                Text(text = "• 15 Evaluadores (+3 Respaldos)\n• 📲 Requiere: Descargar y probar App #4\n• 🚀 Ranura 3 de App desbloqueada", fontSize = 11.sp, color = MaterialTheme.colorScheme.onTertiaryContainer)
                             }
                         }
                     }
