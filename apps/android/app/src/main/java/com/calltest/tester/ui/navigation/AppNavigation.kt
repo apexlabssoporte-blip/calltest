@@ -1,5 +1,6 @@
 package com.calltest.tester.ui.navigation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -97,99 +98,9 @@ private fun MainAppNavigationContent(
     var isDevToolsOpen by remember { mutableStateOf(false) }
     var currentStreakDays by remember { mutableStateOf(6) }
 
+    var isPublishWizardOpen by remember { mutableStateOf(false) }
     val myPublishedApps = remember {
-        mutableStateListOf(
-            DeveloperAppCampaign(
-                id = "dev-app-1",
-                appName = "Mi Aplicación en Prueba",
-                packageName = "com.miapp.ejemplo",
-                currentDay = 6,
-                totalDays = 14,
-                activeTestersCount = 11,
-                targetTesters = 12,
-                status = "ACTIVE",
-                assignedTesters = listOf(
-                    AssignedTesterItem(
-                        id = "t-1",
-                        alias = "Carlos R.",
-                        tier = "ACTIVO",
-                        deviceModel = "Xiaomi Redmi Note 13 (Android 14)",
-                        daysCompleted = 6,
-                        totalDays = 14,
-                        todayMinutes = 4.5,
-                        totalMinutes = 28.0,
-                        isTodayCompleted = true,
-                        isSdkMeasured = true
-                    ),
-                    AssignedTesterItem(
-                        id = "t-2",
-                        alias = "Elena M.",
-                        tier = "CONFIABLE",
-                        deviceModel = "Samsung Galaxy S23 (Android 15)",
-                        daysCompleted = 6,
-                        totalDays = 14,
-                        todayMinutes = 3.8,
-                        totalMinutes = 24.5,
-                        isTodayCompleted = true,
-                        isSdkMeasured = true
-                    ),
-                    AssignedTesterItem(
-                        id = "t-3",
-                        alias = "David G.",
-                        tier = "ACTIVO",
-                        deviceModel = "Google Pixel 8 (Android 15)",
-                        daysCompleted = 6,
-                        totalDays = 14,
-                        todayMinutes = 5.2,
-                        totalMinutes = 31.0,
-                        isTodayCompleted = true,
-                        isSdkMeasured = true
-                    ),
-                    AssignedTesterItem(
-                        id = "t-4",
-                        alias = "Sofía L.",
-                        tier = "ACTIVO",
-                        deviceModel = "Motorola Edge 40 (Android 14)",
-                        daysCompleted = 5,
-                        totalDays = 14,
-                        todayMinutes = 0.0,
-                        totalMinutes = 21.0,
-                        isTodayCompleted = false,
-                        isSdkMeasured = true
-                    ),
-                    AssignedTesterItem(
-                        id = "t-5",
-                        alias = "Mateo P.",
-                        tier = "CONFIABLE",
-                        deviceModel = "POCO X6 Pro (Android 14)",
-                        daysCompleted = 6,
-                        totalDays = 14,
-                        todayMinutes = 3.5,
-                        totalMinutes = 22.0,
-                        isTodayCompleted = true,
-                        isSdkMeasured = false
-                    )
-                ),
-                feedbackList = listOf(
-                    TesterFeedbackItem(
-                        id = "fb-1",
-                        testerAlias = "Carlos R. (Tester Activo)",
-                        rating = 5,
-                        comment = "La app funciona muy fluida. Ninguna caída en sesión de 10 min.",
-                        deviceModel = "Xiaomi Redmi Note 13",
-                        date = "Hace 2h"
-                    ),
-                    TesterFeedbackItem(
-                        id = "fb-2",
-                        testerAlias = "Elena M. (Tester Confiable)",
-                        rating = 5,
-                        comment = "Completé la prueba del día 6 sin inconvenientes.",
-                        deviceModel = "Samsung Galaxy S23",
-                        date = "Hace 4h"
-                    )
-                )
-            )
-        )
+        mutableStateListOf<DeveloperAppCampaign>()
     }
 
     // Mock initial missions per campaign (Enfoque motivador orientado a beneficios)
@@ -351,6 +262,62 @@ private fun MainAppNavigationContent(
             },
             modifier = modifier
         )
+    } else if (isPublishWizardOpen) {
+        MyAppScreen(
+            publishedApps = emptyList(),
+            currentStreakDays = currentStreakDays,
+            initialWizardOpen = true,
+            onCreateAppCampaign = { name, pkg, category, desc, group, ownTesters, missions ->
+                scope.launch {
+                    CallTestApiClient.createNewApp(
+                        context = context,
+                        name = name,
+                        packageName = pkg,
+                        category = category,
+                        description = desc,
+                        googleGroupUrl = group
+                    )
+                }
+                val newApp = DeveloperAppCampaign(
+                    id = "dev-${System.currentTimeMillis()}",
+                    appName = name,
+                    packageName = pkg,
+                    category = category,
+                    description = desc,
+                    currentDay = 1,
+                    totalDays = 14,
+                    activeTestersCount = 1,
+                    targetTesters = 12,
+                    externalTestersCount = ownTesters,
+                    generatedMissions = missions,
+                    status = "ACTIVE",
+                    assignedTesters = listOf(
+                        AssignedTesterItem(
+                            id = "t-1",
+                            alias = "Tester Comunitario 1",
+                            tier = "ACTIVO",
+                            deviceModel = "Xiaomi Redmi Note 13 (Android 14)",
+                            daysCompleted = 1,
+                            totalDays = 14,
+                            todayMinutes = 3.2,
+                            totalMinutes = 3.2,
+                            isTodayCompleted = true,
+                            isSdkMeasured = true
+                        )
+                    )
+                )
+                myPublishedApps.add(newApp)
+                userRole = "DEVELOPER"
+                SessionManager.updateSelectedRole(context, "DEVELOPER")
+                isPublishWizardOpen = false
+                currentTab = MainTabDestination.MY_APP
+                Toast.makeText(context, "¡$name publicada con éxito! La pestaña 'Mi App' ya está desbloqueada.", Toast.LENGTH_LONG).show()
+            },
+            onOpenProfile = { isProfileOpen = true },
+            onOpenNotifications = { isNotificationsOpen = true },
+            onCancelWizard = { isPublishWizardOpen = false },
+            modifier = modifier
+        )
     } else if (!isOnboardingDone) {
         OnboardingRoleScreen(
             onRoleSelected = { role ->
@@ -503,9 +470,7 @@ private fun MainAppNavigationContent(
                     availableCampaigns = availableApps,
                     isDeveloperMode = isDev,
                     onPublishAppClick = {
-                        userRole = "DEVELOPER"
-                        SessionManager.updateSelectedRole(context, "DEVELOPER")
-                        currentTab = MainTabDestination.MY_APP
+                        isPublishWizardOpen = true
                     },
                     onJoinCampaign = { app ->
                         val alreadyJoined = participatingApps.any { it.campaignId == app.id }

@@ -128,14 +128,16 @@ data class DeveloperAppCampaign(
 fun MyAppScreen(
     publishedApps: List<DeveloperAppCampaign>,
     currentStreakDays: Int = 6,
+    initialWizardOpen: Boolean = false,
     onCreateAppCampaign: (String, String, String, String, String, Int, List<TesterMissionItem>) -> Unit,
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
+    onCancelWizard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val strings = LocalAppStrings.current
-    var isPublishModalOpen by remember { mutableStateOf(false) }
+    var isPublishModalOpen by remember(initialWizardOpen) { mutableStateOf(initialWizardOpen) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var selectedAppId by remember(publishedApps) {
