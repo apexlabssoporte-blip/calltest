@@ -522,6 +522,19 @@ private fun MainAppNavigationContent(
                 MainTabDestination.MY_APP -> MyAppScreen(
                     publishedApps = myPublishedApps,
                     currentStreakDays = currentStreakDays,
+                    onAppGraduated = { graduatedApp ->
+                        myPublishedApps.remove(graduatedApp)
+                        if (myPublishedApps.isEmpty()) {
+                            userRole = "TESTER"
+                            SessionManager.updateSelectedRole(context, "TESTER")
+                            currentTab = MainTabDestination.HOME
+                            Toast.makeText(
+                                context,
+                                "🎉 ¡App Aprobada con éxito! Pasaste al Modo Tester Comunitario para acumular créditos.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    },
                     onCreateAppCampaign = { name, pkg, category, desc, group, ownTesters, missions ->
                         scope.launch {
                             CallTestApiClient.createNewApp(

@@ -130,6 +130,7 @@ fun MyAppScreen(
     currentStreakDays: Int = 6,
     initialWizardOpen: Boolean = false,
     onCreateAppCampaign: (String, String, String, String, String, Int, List<TesterMissionItem>) -> Unit,
+    onAppGraduated: (DeveloperAppCampaign) -> Unit = {},
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
     onCancelWizard: () -> Unit = {},
@@ -1264,14 +1265,9 @@ fun MyAppScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            val idx = publishedApps.indexOfFirst { it.id == developerApp.id }
-                            if (idx != -1) {
-                                // Approved in production
-
-                            }
                             CallTestNotificationManager.sendGooglePlayApprovedCelebration(context, developerApp.appName)
                             isApprovalModalOpen = false
-                            Toast.makeText(context, "🎉 ¡Felicidades! Tu app está registrada como Aprobada en Google Play.", Toast.LENGTH_LONG).show()
+                            onAppGraduated(developerApp)
                         }
                     ) {
                         Text("¡Confirmar y Celebrar! 🚀", fontWeight = FontWeight.Bold)
