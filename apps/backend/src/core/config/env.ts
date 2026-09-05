@@ -16,9 +16,16 @@ export const EnvSchema = Type.Object({
     default:
       "postgresql://calltest_user:calltest_password@localhost:5432/calltest_db?schema=public",
   }),
+  REDIS_URL: Type.Optional(Type.String()),
   REDIS_HOST: Type.String({ default: "localhost" }),
   REDIS_PORT: Type.Number({ default: 6379 }),
   REDIS_PASSWORD: Type.Optional(Type.String()),
+  EVIDENCE_STORAGE_PROVIDER: Type.String({ default: "local" }),
+  S3_BUCKET: Type.Optional(Type.String()),
+  S3_REGION: Type.String({ default: "auto" }),
+  S3_ENDPOINT: Type.Optional(Type.String()),
+  S3_ACCESS_KEY_ID: Type.Optional(Type.String()),
+  S3_SECRET_ACCESS_KEY: Type.Optional(Type.String()),
 
   // Campaign Domain Defaults
   CAMPAIGN_TARGET_TESTERS: Type.Number({ default: 12 }),
@@ -150,11 +157,18 @@ export function loadEnv(): EnvConfig {
     DATABASE_URL:
       process.env.DATABASE_URL ||
       "postgresql://calltest_user:calltest_password@localhost:5432/calltest_db?schema=public",
+    REDIS_URL: process.env.REDIS_URL || undefined,
     REDIS_HOST: process.env.REDIS_HOST || "localhost",
     REDIS_PORT: process.env.REDIS_PORT
       ? parseInt(process.env.REDIS_PORT, 10)
       : 6379,
     REDIS_PASSWORD: process.env.REDIS_PASSWORD || undefined,
+    EVIDENCE_STORAGE_PROVIDER: process.env.EVIDENCE_STORAGE_PROVIDER || "local",
+    S3_BUCKET: process.env.S3_BUCKET || undefined,
+    S3_REGION: process.env.S3_REGION || "auto",
+    S3_ENDPOINT: process.env.S3_ENDPOINT || undefined,
+    S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || undefined,
+    S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || undefined,
     CAMPAIGN_TARGET_TESTERS: targetTesters,
     CAMPAIGN_MAX_TESTERS: maxTesters,
     CAMPAIGN_DURATION_DAYS: durationDays,
@@ -311,6 +325,13 @@ export function validateProductionEnv(e: Env): { isValid: boolean; errors: strin
     }
 
     if (
+      !e.INTERNAL_SERVICE_KEY ||
+      e.INTERNAL_SERVICE_KEY.includes("calltest-internal-secure-service-key-v1")
+    ) {
+      errors.push("INTERNAL_SERVICE_KEY must be configured securely for production");
+    }
+
+    if (
       !e.INTERNAL_SERVICE_SECRET ||
       e.INTERNAL_SERVICE_SECRET.includes("calltest-internal-secure-service-secret-v1")
     ) {
@@ -318,7 +339,17 @@ export function validateProductionEnv(e: Env): { isValid: boolean; errors: strin
     }
 
     if (e.CORS_ORIGIN === "*") {
-      errors.push("CORS_ORIGIN should not be wildcard '*' in production");
+      errors.push("CORS_ORIGIN must not be wildcard '*' in production");
+    }
+
+    if (e.EVIDENCE_STORAGE_PROVIDER !== "s3") {
+      errors.push("EVIDENCE_STORAGE_PROVIDER must be 's3' in production");
+    } else if (
+      !e.S3_BUCKET ||
+      !e.S3_ACCESS_KEY_ID ||
+      !e.S3_SECRET_ACCESS_KEY
+    ) {
+      errors.push("S3_BUCKET and S3 credentials are required in production");
     }
   }
 

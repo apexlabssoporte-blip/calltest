@@ -1,5 +1,6 @@
 package com.calltest.tester.ui.profile
 
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calltest.tester.BuildConfig
 import com.calltest.tester.i18n.AppLanguage
 import com.calltest.tester.i18n.LanguageManager
 import com.calltest.tester.i18n.LocalAppLanguage
@@ -297,7 +299,10 @@ fun ProfileScreen(
                     ProfileInfoRow(label = strings.userIdLabel, value = testerId)
                     ProfileInfoRow(label = strings.countryLabel, value = country)
                     ProfileInfoRow(label = strings.deviceModelLabel, value = deviceModel)
-                    ProfileInfoRow(label = strings.osLabel, value = "Android 15 (API 35)")
+                    ProfileInfoRow(
+                        label = strings.osLabel,
+                        value = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+                    )
                 }
             }
 
@@ -431,7 +436,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "CallTest Tester v1.0.0 Global Edition",
+                        text = "CallTest Tester v${BuildConfig.VERSION_NAME} Global Edition",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -440,20 +445,21 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Botón de Acceso al Laboratorio de Desarrollador
-            Button(
-                onClick = onOpenDevTools,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "🛠️ Abrir Laboratorio de Desarrollador (DevTools)",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiary,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+            if (BuildConfig.CALLTEST_DEMO_MODE) {
+                Button(
+                    onClick = onOpenDevTools,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "🛠️ Abrir Laboratorio de Desarrollador (DevTools)",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onTertiary,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
 
             // Logout Button

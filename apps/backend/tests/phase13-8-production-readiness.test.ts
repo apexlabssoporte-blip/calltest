@@ -40,8 +40,13 @@ describe("Phase 13.8: Production Readiness & Deployment Hardening", () => {
         NODE_ENV: "production",
         DATABASE_URL: "postgresql://prod_user:StrongProdSecretPassword987@prod-db.calltest.internal:5432/calltest_prod",
         JWT_SECRET: "strong_production_jwt_signing_secret_at_least_32_chars_long_12345",
+        INTERNAL_SERVICE_KEY: "production-service-key-2026",
         INTERNAL_SERVICE_SECRET: "secure_internal_prod_hmac_secret_key_9876543210_valid",
         CORS_ORIGIN: "https://calltest.app,https://admin.calltest.app",
+        EVIDENCE_STORAGE_PROVIDER: "s3",
+        S3_BUCKET: "calltest-evidence",
+        S3_ACCESS_KEY_ID: "test-access-key",
+        S3_SECRET_ACCESS_KEY: "test-secret-key",
       };
 
       const validation = validateProductionEnv(secureProdEnv);

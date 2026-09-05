@@ -34,9 +34,12 @@ coverage/
 
 # Android
 .gradle/
+.kotlin/
 build/
 app/build/
 sdk/build/
+*.keystore
+*.jks
 *.iml
 local.properties
 .cxx/
@@ -46,6 +49,9 @@ captures/
 .externalNativeBuild/
 .navigation/
 assetpackdownloadcache/
+
+# Runtime uploads (never version user evidence)
+/apps/backend/uploads/
 
 # Docker
 docker/data/

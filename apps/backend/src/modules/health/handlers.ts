@@ -20,7 +20,7 @@ export async function getReadinessHandler(
   const isDbOk = await DatabaseClient.ping();
   const isRedisOk = await RedisClient.ping();
 
-  const allHealthy = isDbOk;
+  const allHealthy = isDbOk && isRedisOk;
   const statusCode = allHealthy ? 200 : 503;
 
   return reply.code(statusCode).send({
@@ -28,7 +28,7 @@ export async function getReadinessHandler(
     timestamp: new Date().toISOString(),
     services: {
       database: isDbOk ? "ok" : "error",
-      redis: isRedisOk ? "ok" : "standalone",
+      redis: isRedisOk ? "ok" : "error",
     },
   });
 }
@@ -44,4 +44,3 @@ export async function getStartupHandler(
     uptimeSeconds: Math.floor(uptime),
   });
 }
-

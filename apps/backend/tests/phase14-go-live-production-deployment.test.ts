@@ -79,8 +79,13 @@ describe("Phase 14: Go-Live & Production Deployment Verification", () => {
         NODE_ENV: "production",
         DATABASE_URL: "postgresql://calltest_admin:SecureProdDatabasePassword2026@prod-cluster.calltest.internal:5432/calltest_prod",
         JWT_SECRET: "production_super_secure_jwt_signing_key_at_least_32_characters_long",
+        INTERNAL_SERVICE_KEY: "production-service-key-2026",
         INTERNAL_SERVICE_SECRET: "production_secure_hmac_service_secret_key_9876543210_valid",
         CORS_ORIGIN: "https://calltest.app,https://admin.calltest.app",
+        EVIDENCE_STORAGE_PROVIDER: "s3",
+        S3_BUCKET: "calltest-evidence",
+        S3_ACCESS_KEY_ID: "test-access-key",
+        S3_SECRET_ACCESS_KEY: "test-secret-key",
       };
 
       const passed = validateProductionEnv(productionHardenedEnv);

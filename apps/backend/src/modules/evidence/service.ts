@@ -1,6 +1,6 @@
 import { prisma } from "../../core/database/prisma.js";
 import { EvidenceRepository } from "./repository.js";
-import { LocalEvidenceStorage } from "../../core/storage/local-evidence-storage.js";
+import { evidenceStorage } from "../../core/storage/evidence-storage.js";
 import {
   AttemptStatus,
   AuditAction,
@@ -14,8 +14,6 @@ import { AuditService } from "../../core/services/audit-service.js";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../../core/errors/app-error.js";
 import { eventBus } from "../../core/events/domain-event-bus.js";
 import { FraudService } from "../fraud/service.js";
-
-const storage = new LocalEvidenceStorage();
 
 export class EvidenceService {
   /**
@@ -66,7 +64,7 @@ export class EvidenceService {
     }
 
     // 2. Save via Storage abstraction (Validates MIME, Size, computes SHA-256)
-    const stored = await storage.save(buffer, originalFilename, mimeType);
+    const stored = await evidenceStorage.save(buffer, originalFilename, mimeType);
 
     // 3. Duplication check across campaigns / testers
     const existingSameHash = await EvidenceRepository.findBySha256(stored.sha256);

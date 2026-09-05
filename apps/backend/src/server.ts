@@ -1,9 +1,16 @@
 import { buildApp } from "./app.js";
-import { env } from "./core/config/env.js";
+import { env, validateProductionEnv } from "./core/config/env.js";
 import { DatabaseClient } from "./core/database/prisma.js";
 import { RedisClient } from "./core/redis/client.js";
 
 async function startServer() {
+  const productionValidation = validateProductionEnv(env);
+  if (!productionValidation.isValid) {
+    throw new Error(
+      `Unsafe production configuration:\n- ${productionValidation.errors.join("\n- ")}`,
+    );
+  }
+
   const app = buildApp();
 
   const shutdown = async (signal: string) => {

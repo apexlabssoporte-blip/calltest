@@ -5,33 +5,53 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+val callTestApiBaseUrl = System.getenv("CALLTEST_API_BASE_URL")
+    ?: "https://calltest-api.onrender.com"
+
 android {
     namespace = "com.calltest.tester"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.calltest.tester"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        targetSdk = 36
+        versionCode = 2
+        versionName = "1.0.1"
+
+        buildConfigField("String", "CALLTEST_API_BASE_URL", "\"$callTestApiBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = file("calltest-release.keystore")
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "calltest"
-            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "calltestkey"
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: "calltest"
+        if (
+            releaseKeystorePath != null &&
+            releaseKeystorePassword != null &&
+            releaseKeyAlias != null &&
+            releaseKeyPassword != null
+        ) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
         }
     }
 
     buildTypes {
+        debug {
+            buildConfigField("Boolean", "CALLTEST_DEMO_MODE", "true")
+        }
         release {
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.findByName("release")
+            buildConfigField("Boolean", "CALLTEST_DEMO_MODE", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -47,6 +67,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

@@ -6,19 +6,25 @@ export class RedisClient {
 
   public static getInstance(): Redis {
     if (!RedisClient.instance) {
-      RedisClient.instance = new Redis({
-        host: env.REDIS_HOST,
-        port: env.REDIS_PORT,
-        password: env.REDIS_PASSWORD || undefined,
+      const options = {
         maxRetriesPerRequest: 1,
         lazyConnect: true,
-        retryStrategy(times) {
+        retryStrategy(times: number) {
           if (times > 3) {
             return null; // Stop retrying after 3 attempts
           }
           return Math.min(times * 200, 1000);
         },
-      });
+      };
+
+      RedisClient.instance = env.REDIS_URL
+        ? new Redis(env.REDIS_URL, options)
+        : new Redis({
+            ...options,
+            host: env.REDIS_HOST,
+            port: env.REDIS_PORT,
+            password: env.REDIS_PASSWORD || undefined,
+          });
     }
     return RedisClient.instance;
   }

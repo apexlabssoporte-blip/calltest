@@ -665,3 +665,22 @@ fun DailyMissionTimelineCard(
         }
     }
 }
+
+private fun getMissionPointsBadge(title: String): String {
+    val day = Regex("""D[ií]a\s+(\d+)""", RegexOption.IGNORE_CASE)
+        .find(title)
+        ?.groupValues
+        ?.getOrNull(1)
+        ?.toIntOrNull()
+
+    val points = when (day) {
+        in 1..3 -> 10
+        in 4..7 -> 15
+        in 8..10 -> 20
+        in 11..13 -> 30
+        14 -> 100
+        else -> 10
+    }
+
+    return "+$points pts"
+}

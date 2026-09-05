@@ -15,15 +15,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,9 +40,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calltest.tester.BuildConfig
 import com.calltest.tester.data.network.CallTestApiClient
 import com.calltest.tester.data.network.SessionManager
 import kotlinx.coroutines.launch
@@ -52,10 +58,53 @@ fun LoginScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
+    var isRegistering by remember { mutableStateOf(false) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var displayName by remember { mutableStateOf("") }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize()
-    ) { innerPadding ->
+    fun submitCredentials() {
+        val cleanEmail = email.trim()
+        val cleanName = displayName.trim()
+        if (!cleanEmail.contains("@")) {
+            Toast.makeText(context, "Escribe un correo válido.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (password.length < 8) {
+            Toast.makeText(context, "La contraseña debe tener al menos 8 caracteres.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (isRegistering && cleanName.length < 2) {
+            Toast.makeText(context, "Escribe tu nombre.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        isLoading = true
+        scope.launch {
+            val result = if (isRegistering) {
+                CallTestApiClient.register(context, cleanEmail, password, cleanName)
+            } else {
+                CallTestApiClient.login(context, cleanEmail, password)
+            }
+            isLoading = false
+            if (result.isSuccess) {
+                Toast.makeText(
+                    context,
+                    if (isRegistering) "Cuenta creada correctamente." else "Sesión iniciada.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                onLoginSuccess(cleanEmail)
+            } else {
+                Toast.makeText(
+                    context,
+                    result.exceptionOrNull()?.message ?: "No se pudo iniciar sesión.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,49 +115,40 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.height(30.dp))
-
-            // Brand Logo & Icon
             Box(
                 modifier = Modifier
                     .size(84.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(
                         Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
-                            )
+                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "CT",
-                    color = Color.White,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 34.sp
-                )
+                Text("CT", color = Color.White, fontWeight = FontWeight.Black, fontSize = 34.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
+            Text("CallTest", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text(
-                text = "CallTest",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Text(
-                text = "Comunidad de Evaluadores para Google Play",
+                "Comunidad de evaluadores para Google Play",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(26.dp))
+            if (BuildConfig.CALLTEST_DEMO_MODE) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "MODO DEMOSTRACIÓN · Los perfiles y campañas pueden ser simulados",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    textAlign = TextAlign.Center
+                )
+            }
 
-            // Value Proposition / Trust Card
+            Spacer(modifier = Modifier.height(24.dp))
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
@@ -120,110 +160,92 @@ fun LoginScreen(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(text = "🛡️", fontSize = 18.sp)
-                        Text(
-                            text = "Acompañamiento y Cobertura de 14 Días",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
+                    Text(
+                        if (isRegistering) "Crear cuenta" else "Iniciar sesión",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (isRegistering) {
+                        OutlinedTextField(
+                            value = displayName,
+                            onValueChange = { displayName = it },
+                            label = { Text("Nombre") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(text = "👥", fontSize = 18.sp)
-                        Text(
-                            text = "12 Evaluadores Reales con Diversidad de Hardware",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(text = "⏱️", fontSize = 18.sp)
-                        Text(
-                            text = "Misiones Diarias de 3 Minutos por SDK",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Correo electrónico") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Contraseña") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(36.dp))
-
-            // ==========================================
-            // BOTÓN ÚNICO: CONTINUAR CON GOOGLE
-            // ==========================================
+            Spacer(modifier = Modifier.height(18.dp))
             Button(
-                onClick = {
-                    isLoading = true
-                    scope.launch {
-                        val result = CallTestApiClient.login(context, "carlos.dev@gmail.com", "google-oauth-token")
-                        isLoading = false
-                        if (result.isSuccess) {
-                            Toast.makeText(context, "¡Sesión iniciada con Google!", Toast.LENGTH_SHORT).show()
-                            onLoginSuccess("carlos.dev@gmail.com")
-                        } else {
-                            SessionManager.saveSession(
-                                context,
-                                "mock-google-jwt-token",
-                                email = "carlos.dev@gmail.com",
-                                name = "Carlos Dev"
-                            )
-                            Toast.makeText(context, "¡Bienvenido a CallTest!", Toast.LENGTH_SHORT).show()
-                            onLoginSuccess("carlos.dev@gmail.com")
-                        }
-                    }
-                },
+                onClick = { submitCredentials() },
                 enabled = !isLoading,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+                modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "🌐", fontSize = 22.sp)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Iniciar Sesión con Google",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                    Text(
+                        if (isRegistering) "Crear mi cuenta" else "Entrar",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            TextButton(onClick = { isRegistering = !isRegistering }, enabled = !isLoading) {
+                Text(if (isRegistering) "Ya tengo una cuenta" else "Crear una cuenta nueva")
+            }
+
+            if (BuildConfig.CALLTEST_DEMO_MODE) {
+                OutlinedButton(
+                    onClick = {
+                        SessionManager.saveSession(
+                            context,
+                            "mock-demo-jwt-token",
+                            email = "demo@calltest.local",
+                            name = "Usuario de demostración"
                         )
+                        onLoginSuccess("demo@calltest.local")
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🧪")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Entrar al modo demostración")
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Al continuar, aceptas las políticas comunitarias de CallTest.",
+                "Al continuar, aceptas los Términos de uso y la Política de privacidad de CallTest.",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
-
             Spacer(modifier = Modifier.height(24.dp))
         }
     }

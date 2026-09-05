@@ -1,6 +1,7 @@
 package com.calltest.tester.data.network
 
 import android.content.Context
+import com.calltest.tester.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -13,13 +14,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 @Serializable
-data class LoginRequest(val email: String, val passwordHash: String)
+data class LoginRequest(val email: String, val password: String)
 
 @Serializable
 data class RegisterRequest(
     val email: String,
-    val passwordHash: String,
-    val name: String,
+    val password: String,
+    val displayName: String,
     val role: String = "BOTH"
 )
 
@@ -34,7 +35,7 @@ data class AuthResponse(
 data class UserDto(
     val id: String,
     val email: String,
-    val name: String,
+    val displayName: String,
     val role: String,
     val tier: String? = "ACTIVE"
 )
@@ -79,8 +80,7 @@ data class ApiResponse<T>(
 )
 
 object CallTestApiClient {
-    // URL en producción desplegada en Render con HTTPS
-    var baseUrl: String = "https://calltest-api.onrender.com"
+    var baseUrl: String = BuildConfig.CALLTEST_API_BASE_URL.trimEnd('/')
 
     val json = Json {
         ignoreUnknownKeys = true
@@ -90,7 +90,7 @@ object CallTestApiClient {
 
     suspend fun login(context: Context, email: String, password: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
         try {
-            val body = json.encodeToString(LoginRequest(email = email, passwordHash = password))
+            val body = json.encodeToString(LoginRequest(email = email, password = password))
             val (code, responseText) = executeHttpRequest(
                 endpoint = "/auth/login",
                 method = "POST",
@@ -105,7 +105,7 @@ object CallTestApiClient {
                     refreshToken = authRes.refreshToken ?: "",
                     userId = authRes.user?.id ?: "usr-${System.currentTimeMillis()}",
                     email = authRes.user?.email ?: email,
-                    name = authRes.user?.name ?: "Desarrollador CallTest",
+                    name = authRes.user?.displayName ?: "Desarrollador CallTest",
                     role = authRes.user?.role ?: "BOTH"
                 )
                 Result.success(authRes)
@@ -119,7 +119,7 @@ object CallTestApiClient {
 
     suspend fun register(context: Context, email: String, password: String, name: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
         try {
-            val body = json.encodeToString(RegisterRequest(email = email, passwordHash = password, name = name))
+            val body = json.encodeToString(RegisterRequest(email = email, password = password, displayName = name))
             val (code, responseText) = executeHttpRequest(
                 endpoint = "/auth/register",
                 method = "POST",
@@ -134,7 +134,7 @@ object CallTestApiClient {
                     refreshToken = authRes.refreshToken ?: "",
                     userId = authRes.user?.id ?: "usr-${System.currentTimeMillis()}",
                     email = authRes.user?.email ?: email,
-                    name = authRes.user?.name ?: name,
+                    name = authRes.user?.displayName ?: name,
                     role = authRes.user?.role ?: "BOTH"
                 )
                 Result.success(authRes)
