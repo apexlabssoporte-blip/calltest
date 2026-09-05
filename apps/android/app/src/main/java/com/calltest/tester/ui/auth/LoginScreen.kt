@@ -149,7 +149,7 @@ fun LoginScreen(
                     ) {
                         Text(text = "🛡️", fontSize = 18.sp)
                         Text(
-                            text = "Garantía de 14 Días para Google Play",
+                            text = "Acompañamiento y Cobertura de 14 Días",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold
                         )

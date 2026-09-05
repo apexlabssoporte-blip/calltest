@@ -444,7 +444,7 @@ private fun MainAppNavigationContent(
     } else {
         Scaffold(
             bottomBar = {
-                val isDeveloperMode = userRole == "DEVELOPER" || myPublishedApps.isNotEmpty()
+                val isDeveloperMode = userRole == "DEVELOPER"
                 val visibleTabs = if (isDeveloperMode) {
                     MainTabDestination.entries.toList()
                 } else {
@@ -497,7 +497,7 @@ private fun MainAppNavigationContent(
             },
             modifier = modifier.fillMaxSize()
         ) { innerPadding ->
-            val isDev = userRole == "DEVELOPER" || myPublishedApps.isNotEmpty()
+            val isDev = userRole == "DEVELOPER"
             when (currentTab) {
                 MainTabDestination.HOME -> HomeScreen(
                     availableCampaigns = availableApps,
