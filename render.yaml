@@ -16,10 +16,7 @@ services:
       - key: CORS_ORIGIN
         sync: false
       - key: REDIS_URL
-        fromService:
-          name: calltest-cache
-          type: keyvalue
-          property: connectionString
+        sync: false
       - key: EVIDENCE_STORAGE_PROVIDER
         value: s3
       - key: S3_BUCKET
@@ -48,13 +45,6 @@ services:
         value: "15"
       - key: CAMPAIGN_DURATION_DAYS
         value: "14"
-
-  - type: keyvalue
-    name: calltest-cache
-    plan: free
-    ipAllowList: []
-    maxmemoryPolicy: allkeys-lru
-
 databases:
   - name: calltest-db
     plan: free
