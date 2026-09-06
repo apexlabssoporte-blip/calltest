@@ -23,7 +23,7 @@ import { evidenceRoutes } from "./modules/evidence/routes.js";
 import { rewardRoutes } from "./modules/rewards/routes.js";
 import { adminRoutes } from "./modules/admin/routes.js";
 import { reportRoutes } from "./modules/reports/routes.js";
-import { legalRoutes } from "./modules/legal/routes.js";
+import { legalRoutes } from "./modules/legal/routes-v2.js";
 import { NotificationEventSubscribers } from "./modules/notifications/subscribers/domain-event-subscribers.js";
 import { RewardEventSubscribers } from "./modules/rewards/subscribers/reward-event-subscribers.js";
 import { MetricsService } from "./core/metrics/metrics-service.js";
