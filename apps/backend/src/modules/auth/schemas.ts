@@ -1,5 +1,9 @@
 import { Type, Static } from "@sinclair/typebox";
 import { UserRole, UserStatus, TrustRank } from "@calltest/shared-types";
+import {
+  CURRENT_PRIVACY_VERSION,
+  CURRENT_TERMS_VERSION,
+} from "../legal/versions.js";
 
 export const RegisterRequestSchema = Type.Object({
   email: Type.String({ format: "email" }),
@@ -10,6 +14,9 @@ export const RegisterRequestSchema = Type.Object({
     Type.Literal(UserRole.DEVELOPER),
     Type.Literal(UserRole.BOTH),
   ]),
+  termsAccepted: Type.Literal(true),
+  termsVersion: Type.Literal(CURRENT_TERMS_VERSION),
+  privacyVersion: Type.Literal(CURRENT_PRIVACY_VERSION),
 });
 
 export type RegisterRequest = Static<typeof RegisterRequestSchema>;

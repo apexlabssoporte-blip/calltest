@@ -21,7 +21,10 @@ data class RegisterRequest(
     val email: String,
     val password: String,
     val displayName: String,
-    val role: String = "BOTH"
+    val role: String = "BOTH",
+    val termsAccepted: Boolean = true,
+    val termsVersion: String = "2026-09-06",
+    val privacyVersion: String = "2026-09-06"
 )
 
 @Serializable

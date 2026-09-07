@@ -53,5 +53,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/health/live || exit 1
 
-# Start the Fastify backend service
-CMD ["node", "apps/backend/dist/server.js"]
+# Apply pending production migrations before accepting traffic.
+CMD ["sh", "-c", "npm run db:deploy --workspace=apps/backend && node apps/backend/dist/server.js"]

@@ -11,6 +11,10 @@ import {
 } from "../../core/errors/app-error.js";
 import { UserRole, UserStatus, AuditAction } from "@calltest/shared-types";
 import { RegisterRequest, LoginRequest } from "./schemas.js";
+import {
+  CURRENT_PRIVACY_VERSION,
+  CURRENT_TERMS_VERSION,
+} from "../legal/versions.js";
 
 export class AuthService {
   /**
@@ -21,6 +25,16 @@ export class AuthService {
     data: RegisterRequest,
     context?: { ipAddress?: string; userAgent?: string },
   ) {
+    if (
+      data.termsAccepted !== true ||
+      data.termsVersion !== CURRENT_TERMS_VERSION ||
+      data.privacyVersion !== CURRENT_PRIVACY_VERSION
+    ) {
+      throw new BadRequestError(
+        "You must accept the current Terms of Use and Privacy Policy",
+      );
+    }
+
     if ((data.role as string) === UserRole.ADMIN) {
       throw new BadRequestError("Cannot register as ADMIN directly");
     }
@@ -44,6 +58,9 @@ export class AuthService {
         displayName: data.displayName.trim(),
         role: data.role,
         status: UserStatus.ACTIVE,
+        legalAcceptedAt: new Date(),
+        termsVersion: data.termsVersion,
+        privacyVersion: data.privacyVersion,
       },
     });
 
@@ -52,7 +69,13 @@ export class AuthService {
       action: AuditAction.USER_REGISTERED,
       entityName: "User",
       entityId: user.id,
-      changes: { email: user.email, role: user.role },
+      changes: {
+        email: user.email,
+        role: user.role,
+        legalAcceptedAt: user.legalAcceptedAt,
+        termsVersion: user.termsVersion,
+        privacyVersion: user.privacyVersion,
+      },
       ipAddress: context?.ipAddress,
       userAgent: context?.userAgent,
     });

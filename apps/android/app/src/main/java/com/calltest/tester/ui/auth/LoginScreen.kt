@@ -1,5 +1,7 @@
 package com.calltest.tester.ui.auth
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -62,6 +65,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
+    var legalAccepted by remember { mutableStateOf(false) }
 
     fun submitCredentials() {
         val cleanEmail = email.trim()
@@ -76,6 +80,14 @@ fun LoginScreen(
         }
         if (isRegistering && cleanName.length < 2) {
             Toast.makeText(context, "Escribe tu nombre.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (isRegistering && !legalAccepted) {
+            Toast.makeText(
+                context,
+                "Debes aceptar los Términos de uso y la Política de privacidad.",
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
 
@@ -191,6 +203,37 @@ fun LoginScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    if (isRegistering) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = legalAccepted,
+                                onCheckedChange = { legalAccepted = it }
+                            )
+                            Text(
+                                "Acepto los Términos de uso y la Política de privacidad.",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            TextButton(
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse("https://calltest-api.onrender.com/terms"))
+                                    )
+                                }
+                            ) { Text("Ver términos") }
+                            TextButton(
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse("https://calltest-api.onrender.com/privacy"))
+                                    )
+                                }
+                            ) { Text("Ver privacidad") }
+                        }
+                    }
                 }
             }
 
@@ -212,7 +255,13 @@ fun LoginScreen(
                 }
             }
 
-            TextButton(onClick = { isRegistering = !isRegistering }, enabled = !isLoading) {
+            TextButton(
+                onClick = {
+                    isRegistering = !isRegistering
+                    legalAccepted = false
+                },
+                enabled = !isLoading
+            ) {
                 Text(if (isRegistering) "Ya tengo una cuenta" else "Crear una cuenta nueva")
             }
 
@@ -240,7 +289,11 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "Al continuar, aceptas los Términos de uso y la Política de privacidad de CallTest.",
+                if (isRegistering) {
+                    "Lee los documentos antes de aceptar. Versión legal: 6 de septiembre de 2026."
+                } else {
+                    "Protegemos el acceso a tu cuenta y tus datos personales."
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

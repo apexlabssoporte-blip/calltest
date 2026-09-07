@@ -12,11 +12,30 @@ import {
 } from "../src/core/errors/app-error.js";
 
 describe("AuthService", () => {
+  const legalAcceptance = {
+    termsAccepted: true as const,
+    termsVersion: "2026-09-06" as const,
+    privacyVersion: "2026-09-06" as const,
+  };
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
   describe("register", () => {
+    it("should reject registration without current legal acceptance", async () => {
+      await expect(
+        AuthService.register({
+          email: "no-consent@calltest.com",
+          password: "Password123!",
+          displayName: "No Consent",
+          role: UserRole.TESTER,
+          termsAccepted: false,
+          termsVersion: "outdated",
+          privacyVersion: "outdated",
+        } as any),
+      ).rejects.toThrow(BadRequestError);
+    });
+
     it("should register a new TESTER successfully", async () => {
       vi.spyOn(prisma.user, "findUnique").mockResolvedValue(null);
       const mockCreatedUser = {
@@ -25,6 +44,7 @@ describe("AuthService", () => {
         passwordHash: "salt:hash",
         displayName: "Tester One",
         role: UserRole.TESTER,
+        ...legalAcceptance,
         status: UserStatus.ACTIVE,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -37,6 +57,7 @@ describe("AuthService", () => {
         password: "Password123!",
         displayName: "Tester One",
         role: UserRole.TESTER,
+        ...legalAcceptance,
       });
 
       expect(user.id).toBe("user-uuid-1");
@@ -52,6 +73,7 @@ describe("AuthService", () => {
         passwordHash: "salt:hash",
         displayName: "Both User",
         role: UserRole.BOTH,
+        ...legalAcceptance,
         status: UserStatus.ACTIVE,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -64,6 +86,7 @@ describe("AuthService", () => {
         password: "Password123!",
         displayName: "Both User",
         role: UserRole.BOTH,
+        ...legalAcceptance,
       });
 
       expect(user.role).toBe(UserRole.BOTH);
@@ -76,6 +99,7 @@ describe("AuthService", () => {
           password: "Password123!",
           displayName: "Admin",
           role: UserRole.ADMIN as any,
+          ...legalAcceptance,
         }),
       ).rejects.toThrow(BadRequestError);
     });
@@ -92,6 +116,7 @@ describe("AuthService", () => {
           password: "Password123!",
           displayName: "Duplicate",
           role: UserRole.TESTER,
+          ...legalAcceptance,
         }),
       ).rejects.toThrow(ConflictError);
     });

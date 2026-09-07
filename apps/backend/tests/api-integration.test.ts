@@ -12,6 +12,21 @@ describe("API End-to-End Integration", () => {
   });
 
   describe("Auth Routes", () => {
+    it("POST /auth/register should reject a request without legal acceptance", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: {
+          email: "no-consent@calltest.com",
+          password: "SecurePassword123!",
+          displayName: "No Consent",
+          role: UserRole.TESTER,
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
     it("POST /auth/register should create user and return 201 with tokens", async () => {
       vi.spyOn(prisma.user, "findUnique").mockResolvedValue(null);
       vi.spyOn(prisma.user, "create").mockResolvedValue({
@@ -38,6 +53,9 @@ describe("API End-to-End Integration", () => {
           password: "SecurePassword123!",
           displayName: "Developer One",
           role: UserRole.DEVELOPER,
+          termsAccepted: true,
+          termsVersion: "2026-09-06",
+          privacyVersion: "2026-09-06",
         },
       });
 

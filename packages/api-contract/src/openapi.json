@@ -47,6 +47,26 @@
       "post": {
         "tags": ["Auth"],
         "summary": "Register a new user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "displayName", "role", "termsAccepted", "termsVersion", "privacyVersion"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8, "maxLength": 100 },
+                  "displayName": { "type": "string", "minLength": 2, "maxLength": 50 },
+                  "role": { "type": "string", "enum": ["TESTER", "DEVELOPER", "BOTH"] },
+                  "termsAccepted": { "type": "boolean", "const": true },
+                  "termsVersion": { "type": "string", "const": "2026-09-06" },
+                  "privacyVersion": { "type": "string", "const": "2026-09-06" }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "201": { "description": "User created successfully with access and refresh tokens" },
           "400": { "description": "Validation error" },
