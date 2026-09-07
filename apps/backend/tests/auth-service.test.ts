@@ -14,8 +14,8 @@ import {
 describe("AuthService", () => {
   const legalAcceptance = {
     termsAccepted: true as const,
-    termsVersion: "2026-09-06" as const,
-    privacyVersion: "2026-09-06" as const,
+    termsVersion: "2026-09-07" as const,
+    privacyVersion: "2026-09-07" as const,
   };
   beforeEach(() => {
     vi.restoreAllMocks();

@@ -54,8 +54,8 @@ describe("API End-to-End Integration", () => {
           displayName: "Developer One",
           role: UserRole.DEVELOPER,
           termsAccepted: true,
-          termsVersion: "2026-09-06",
-          privacyVersion: "2026-09-06",
+          termsVersion: "2026-09-07",
+          privacyVersion: "2026-09-07",
         },
       });
 

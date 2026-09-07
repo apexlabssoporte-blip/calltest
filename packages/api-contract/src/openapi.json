@@ -60,8 +60,8 @@
                   "displayName": { "type": "string", "minLength": 2, "maxLength": 50 },
                   "role": { "type": "string", "enum": ["TESTER", "DEVELOPER", "BOTH"] },
                   "termsAccepted": { "type": "boolean", "const": true },
-                  "termsVersion": { "type": "string", "const": "2026-09-06" },
-                  "privacyVersion": { "type": "string", "const": "2026-09-06" }
+                  "termsVersion": { "type": "string", "const": "2026-09-07" },
+                  "privacyVersion": { "type": "string", "const": "2026-09-07" }
                 }
               }
             }

@@ -290,7 +290,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 if (isRegistering) {
-                    "Lee los documentos antes de aceptar. Versión legal: 6 de septiembre de 2026."
+                    "Lee los documentos antes de aceptar. Versión legal: 7 de septiembre de 2026."
                 } else {
                     "Protegemos el acceso a tu cuenta y tus datos personales."
                 },
