@@ -11,6 +11,9 @@ val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
 val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
 val callTestApiBaseUrl = System.getenv("CALLTEST_API_BASE_URL")
     ?: "https://calltest-api.onrender.com"
+// OAuth client IDs are public identifiers. The environment variable allows CI overrides.
+val googleWebClientId = System.getenv("GOOGLE_WEB_CLIENT_ID")
+    ?: "589466301893-siabmdl1emoau0ua5q3hkj9djdcaign0.apps.googleusercontent.com"
 
 android {
     namespace = "com.calltest.tester"
@@ -20,10 +23,11 @@ android {
         applicationId = "com.calltest.tester"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
 
         buildConfigField("String", "CALLTEST_API_BASE_URL", "\"$callTestApiBaseUrl\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -83,6 +87,10 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
+    implementation("androidx.credentials:credentials:1.6.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
+    // 1.1.1 is compatible with this project's Kotlin 2.0 toolchain.
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

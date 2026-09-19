@@ -17,6 +17,14 @@ import java.net.URL
 data class LoginRequest(val email: String, val password: String)
 
 @Serializable
+data class GoogleLoginRequest(
+    val idToken: String,
+    val termsAccepted: Boolean = true,
+    val termsVersion: String = "2026-09-07",
+    val privacyVersion: String = "2026-09-07"
+)
+
+@Serializable
 data class RegisterRequest(
     val email: String,
     val password: String,
@@ -89,6 +97,35 @@ object CallTestApiClient {
         ignoreUnknownKeys = true
         coerceInputValues = true
         encodeDefaults = true
+    }
+
+    suspend fun loginWithGoogle(context: Context, idToken: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
+        try {
+            val body = json.encodeToString(GoogleLoginRequest(idToken = idToken))
+            val (code, responseText) = executeHttpRequest(
+                endpoint = "/auth/google",
+                method = "POST",
+                jsonBody = body,
+                token = null
+            )
+            if (code in 200..299) {
+                val authRes = json.decodeFromString<AuthResponse>(responseText)
+                SessionManager.saveSession(
+                    context = context,
+                    accessToken = authRes.accessToken,
+                    refreshToken = authRes.refreshToken ?: "",
+                    userId = authRes.user?.id ?: "usr-${System.currentTimeMillis()}",
+                    email = authRes.user?.email ?: "",
+                    name = authRes.user?.displayName ?: "Usuario CallTest",
+                    role = authRes.user?.role ?: "BOTH"
+                )
+                Result.success(authRes)
+            } else {
+                Result.failure(Exception("No se pudo validar la cuenta de Google ($code)."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun login(context: Context, email: String, password: String): Result<AuthResponse> = withContext(Dispatchers.IO) {

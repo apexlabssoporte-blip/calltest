@@ -5,6 +5,7 @@ import { AuthenticatedUser } from "../../core/middlewares/auth-guard.js";
 import {
   RegisterRequest,
   LoginRequest,
+  GoogleLoginRequest,
   RefreshTokenRequest,
   LogoutRequest,
 } from "./schemas.js";
@@ -42,6 +43,33 @@ export async function registerHandler(
       rank: user.rank,
       xpBalance: user.xpBalance,
       goldBalance: user.goldBalance,
+      createdAt: user.createdAt.toISOString(),
+      lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+    },
+  });
+}
+
+export async function googleLoginHandler(
+  request: FastifyRequest<{ Body: GoogleLoginRequest }>,
+  reply: FastifyReply,
+) {
+  const user = await AuthService.loginWithGoogle(request.body, {
+    ipAddress: request.ip,
+    userAgent: request.headers["user-agent"],
+  });
+  const accessToken = request.server.jwt.sign(
+    { sub: user.id, email: user.email, role: user.role as unknown as UserRole },
+    { expiresIn: "15m" },
+  );
+  const refreshToken = await AuthService.createRefreshToken(user.id);
+  return reply.code(200).send({
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id, email: user.email, displayName: user.displayName,
+      role: user.role as unknown as UserRole, status: user.status,
+      trustScore: user.trustScore, rank: user.rank,
+      xpBalance: user.xpBalance, goldBalance: user.goldBalance,
       createdAt: user.createdAt.toISOString(),
       lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
     },
@@ -165,4 +193,3 @@ export async function deleteAccountHandler(
 
   return reply.code(200).send(result);
 }
-

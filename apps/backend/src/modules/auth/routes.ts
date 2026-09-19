@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   RegisterRequestSchema,
   LoginRequestSchema,
+  GoogleLoginRequestSchema,
   RefreshTokenRequestSchema,
   LogoutRequestSchema,
   AuthResponseSchema,
@@ -12,6 +13,7 @@ import {
 import {
   registerHandler,
   loginHandler,
+  googleLoginHandler,
   refreshTokenHandler,
   logoutHandler,
   getMeHandler,
@@ -40,6 +42,20 @@ export async function authRoutes(app: FastifyInstance) {
       },
     },
     registerHandler,
+  );
+
+  app.post(
+    "/auth/google",
+    {
+      config: { rateLimit: { max: 15, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["Auth"],
+        summary: "Authenticate with a verified Google ID token",
+        body: GoogleLoginRequestSchema,
+        response: { 200: AuthResponseSchema },
+      },
+    },
+    googleLoginHandler,
   );
 
   // POST /auth/login

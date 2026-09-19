@@ -28,6 +28,15 @@ export const LoginRequestSchema = Type.Object({
 
 export type LoginRequest = Static<typeof LoginRequestSchema>;
 
+export const GoogleLoginRequestSchema = Type.Object({
+  idToken: Type.String({ minLength: 100, maxLength: 10000 }),
+  termsAccepted: Type.Literal(true),
+  termsVersion: Type.Literal(CURRENT_TERMS_VERSION),
+  privacyVersion: Type.Literal(CURRENT_PRIVACY_VERSION),
+});
+
+export type GoogleLoginRequest = Static<typeof GoogleLoginRequestSchema>;
+
 export const RefreshTokenRequestSchema = Type.Object({
   refreshToken: Type.String({ minLength: 10 }),
 });

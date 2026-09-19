@@ -26,6 +26,7 @@ export const EnvSchema = Type.Object({
   S3_ENDPOINT: Type.Optional(Type.String()),
   S3_ACCESS_KEY_ID: Type.Optional(Type.String()),
   S3_SECRET_ACCESS_KEY: Type.Optional(Type.String()),
+  GOOGLE_WEB_CLIENT_ID: Type.Optional(Type.String()),
 
   // Campaign Domain Defaults
   CAMPAIGN_TARGET_TESTERS: Type.Number({ default: 12 }),
@@ -169,6 +170,7 @@ export function loadEnv(): EnvConfig {
     S3_ENDPOINT: process.env.S3_ENDPOINT || undefined,
     S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || undefined,
     S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || undefined,
+    GOOGLE_WEB_CLIENT_ID: process.env.GOOGLE_WEB_CLIENT_ID || undefined,
     CAMPAIGN_TARGET_TESTERS: targetTesters,
     CAMPAIGN_MAX_TESTERS: maxTesters,
     CAMPAIGN_DURATION_DAYS: durationDays,
@@ -322,6 +324,10 @@ export function validateProductionEnv(e: Env): { isValid: boolean; errors: strin
 
     if (!e.JWT_SECRET || e.JWT_SECRET.includes("development_only") || e.JWT_SECRET.length < 32) {
       errors.push("JWT_SECRET must be at least 32 characters long and not use the development placeholder");
+    }
+
+    if (!e.GOOGLE_WEB_CLIENT_ID) {
+      errors.push("GOOGLE_WEB_CLIENT_ID must be configured for Google sign-in");
     }
 
     if (

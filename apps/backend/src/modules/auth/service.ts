@@ -11,12 +11,17 @@ import {
 } from "../../core/errors/app-error.js";
 import { UserRole, UserStatus, AuditAction } from "@calltest/shared-types";
 import { RegisterRequest, LoginRequest } from "./schemas.js";
+import type { GoogleLoginRequest } from "./schemas.js";
+import { OAuth2Client } from "google-auth-library";
+import { env } from "../../core/config/env.js";
 import {
   CURRENT_PRIVACY_VERSION,
   CURRENT_TERMS_VERSION,
 } from "../legal/versions.js";
 
 export class AuthService {
+  private static readonly googleClient = new OAuth2Client();
+
   /**
    * Registers a new User (TESTER, DEVELOPER, or BOTH).
    * Note: ADMIN role cannot be self-assigned.
@@ -133,6 +138,97 @@ export class AuthService {
       userAgent: context?.userAgent,
     });
 
+    return user;
+  }
+
+  /** Verifies a Google ID token and creates or links the local account. */
+  public static async loginWithGoogle(
+    data: GoogleLoginRequest,
+    context?: { ipAddress?: string; userAgent?: string },
+  ) {
+    if (!env.GOOGLE_WEB_CLIENT_ID) {
+      throw new ForbiddenError("Google sign-in is not configured");
+    }
+
+    let ticket;
+    try {
+      ticket = await this.googleClient.verifyIdToken({
+        idToken: data.idToken,
+        audience: env.GOOGLE_WEB_CLIENT_ID,
+      });
+    } catch {
+      throw new UnauthorizedError("Google account could not be verified");
+    }
+    const payload = ticket.getPayload();
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      throw new UnauthorizedError("Google account could not be verified");
+    }
+
+    const normalizedEmail = payload.email.toLowerCase().trim();
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [{ googleSubject: payload.sub }, { email: normalizedEmail }],
+      },
+    });
+
+    if (user?.googleSubject && user.googleSubject !== payload.sub) {
+      throw new ConflictError("This email is already linked to another Google account");
+    }
+
+    if (!user) {
+      const passwordHash = await PasswordHasher.hash(crypto.randomUUID());
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          googleSubject: payload.sub,
+          passwordHash,
+          displayName: (payload.name || normalizedEmail.split("@")[0]).slice(0, 50),
+          role: UserRole.BOTH,
+          status: UserStatus.ACTIVE,
+          legalAcceptedAt: new Date(),
+          termsVersion: data.termsVersion,
+          privacyVersion: data.privacyVersion,
+        },
+      });
+      await AuditService.log({
+        userId: user.id,
+        action: AuditAction.USER_REGISTERED,
+        entityName: "User",
+        entityId: user.id,
+        changes: { provider: "GOOGLE", email: user.email, role: user.role },
+        ipAddress: context?.ipAddress,
+        userAgent: context?.userAgent,
+      });
+    } else if (!user.googleSubject) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { googleSubject: payload.sub },
+      });
+    }
+
+    if (user.status === UserStatus.SUSPENDED) {
+      throw new ForbiddenError("Account is suspended. Please contact support.");
+    }
+    if (user.status === UserStatus.BANNED) {
+      throw new ForbiddenError("Account is permanently banned.");
+    }
+    if (user.status === UserStatus.DELETED) {
+      throw new ForbiddenError("Account has been deleted.");
+    }
+
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+    await AuditService.log({
+      userId: user.id,
+      action: AuditAction.LOGIN,
+      entityName: "User",
+      entityId: user.id,
+      changes: { provider: "GOOGLE" },
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+    });
     return user;
   }
 
@@ -314,6 +410,7 @@ export class AuthService {
         email: anonymizedEmail,
         displayName: "Deleted User",
         name: null,
+        googleSubject: null,
         status: UserStatus.DELETED,
         passwordHash: "ANONYMIZED_DELETED_ACCOUNT",
       },
