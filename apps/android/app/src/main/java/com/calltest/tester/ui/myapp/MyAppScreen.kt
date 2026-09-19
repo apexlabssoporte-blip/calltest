@@ -1483,7 +1483,7 @@ Please inspect my current codebase and provide the exact modified code."""
                         1 -> "Paso 1 de 4: Tu App 📱"
                         2 -> "Paso 2 de 4: Enlaces de Google Play 🔗"
                         3 -> "Paso 3 de 4: Misiones de 14 Días 📋"
-                        else -> "Paso 4 de 4: Integración del SDK ⚡"
+                        else -> "Paso 4 de 4: Verificación automática ⚡"
                     },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
@@ -1493,7 +1493,7 @@ Please inspect my current codebase and provide the exact modified code."""
                         1 -> "Datos y categoría de tu aplicación"
                         2 -> "Enlaces de tu Grupo y Google Play"
                         3 -> "Revisa las 14 misiones diarias para tus evaluadores"
-                        else -> "Telemetría automática opcional de 3 minutos"
+                        else -> "La forma más fácil de comprobar las pruebas"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1801,41 +1801,71 @@ Please inspect my current codebase and provide the exact modified code."""
                     ) {
                         Text(text = "⚡", fontSize = 24.sp)
                         Column {
-                            Text(text = "SDK de Telemetría (Muy Recomendado)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1E88E5))
-                            Text(text = "Mide los 3 min/día automáticamente en los 12 celulares sin pedir capturas.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(text = "Activa la verificación automática", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1E88E5))
+                            Text(text = "CallTest comprobará el uso de tu app sin pedir capturas diarias a tus testers.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Comparativa Limpia
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                            modifier = Modifier.weight(1f)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(7.dp)
                         ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Text(text = "⚡ CON SDK", fontWeight = FontWeight.Black, color = Color(0xFF1E88E5), fontSize = 12.sp)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "• 100% Automático\n• +95% Retención\n• Salud 98/100 Play Store", fontSize = 11.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            }
-                        }
-
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Text(text = "📷 SIN SDK", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "• Capturas diarias\n• Riesgo de abandono\n• Validación manual", fontSize = 11.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
+                            Text(text = "¿Por qué te conviene?", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(text = "✅ Tus testers hacen menos pasos y es más fácil que continúen los 14 días.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(text = "✅ Ves automáticamente quién probó tu app cada día.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(text = "✅ Detectas a tiempo testers inactivos y puedes reemplazarlos.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "Configúralo en 3 pasos",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = "1. Copia las instrucciones para IA.", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "2. Pégalas en Cursor, ChatGPT o Claude junto con tu proyecto.", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "3. Ejecuta tu app y CallTest confirmará la conexión.", style = MaterialTheme.typography.bodySmall)
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { isAiPromptModalOpen = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "🤖 Configurar con ayuda de IA", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+
+                    Text(
+                        text = "Recomendado: normalmente solo necesitas copiar, pegar y aceptar los cambios sugeridos.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "¿Prefieres configurarlo manualmente?",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Estas son las dos líneas principales. La guía para IA incluye el resto de la configuración.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Bloque 1: Gradle con botón Copiar
                     Surface(
@@ -1893,17 +1923,6 @@ Please inspect my current codebase and provide the exact modified code."""
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Botón para abrir el Modal de Prompt para IA
-                    Button(
-                        onClick = { isAiPromptModalOpen = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "🤖 Ver Prompt para IA (Cursor / Claude / ChatGPT)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onTertiary, fontSize = 12.sp)
-                    }
                 }
             }
 
