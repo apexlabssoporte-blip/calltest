@@ -50,15 +50,13 @@ export class AppService {
 
     const apiKey = `apk_${crypto.randomBytes(24).toString("hex")}`;
 
-    let sdkStatus = data.sdkIntegrationStatus ?? SdkIntegrationStatus.NOT_CONFIGURED;
-    let hasSdk = data.hasCallTestSdk ?? false;
-
-    if (data.sdkIntegrationStatus === SdkIntegrationStatus.SDK_ENABLED) {
-      hasSdk = true;
-    } else if (data.hasCallTestSdk === true) {
-      sdkStatus = SdkIntegrationStatus.SDK_ENABLED;
-      hasSdk = true;
-    }
+    // SDK_ENABLED is never trusted from the developer client. Only a valid
+    // handshake from the registered Android package may enable it.
+    const sdkStatus =
+      data.sdkIntegrationStatus === SdkIntegrationStatus.NO_SDK
+        ? SdkIntegrationStatus.NO_SDK
+        : SdkIntegrationStatus.NOT_CONFIGURED;
+    const hasSdk = false;
 
     const app = await prisma.app.create({
       data: {
@@ -138,6 +136,15 @@ export class AppService {
   ) {
     const existingApp = await verifyAppOwnership(appId, userId, userRole);
 
+    if (
+      data.sdkIntegrationStatus === SdkIntegrationStatus.SDK_ENABLED ||
+      data.hasCallTestSdk === true
+    ) {
+      throw new BadRequestError(
+        "SDK_ENABLED can only be confirmed by a valid SDK handshake",
+      );
+    }
+
     let updatedPackageName = existingApp.packageName;
     if (data.packageName && data.packageName.trim() !== existingApp.packageName) {
       const trimmed = data.packageName.trim();
@@ -163,14 +170,11 @@ export class AppService {
       updatedPackageName = trimmed;
     }
 
-    let updatedSdkStatus = data.sdkIntegrationStatus;
-    let updatedHasSdk = data.hasCallTestSdk;
-
-    if (data.sdkIntegrationStatus === SdkIntegrationStatus.SDK_ENABLED) {
-      updatedHasSdk = true;
-    } else if (data.sdkIntegrationStatus === SdkIntegrationStatus.NO_SDK) {
-      updatedHasSdk = false;
-    }
+    const updatedSdkStatus = data.sdkIntegrationStatus;
+    const updatedHasSdk =
+      data.sdkIntegrationStatus === SdkIntegrationStatus.NO_SDK
+        ? false
+        : data.hasCallTestSdk;
 
     const previousStatus = existingApp.sdkIntegrationStatus;
 
@@ -239,8 +243,13 @@ export class AppService {
     context?: { ipAddress?: string; userAgent?: string },
   ) {
     const existingApp = await verifyAppOwnership(appId, userId, userRole);
+    if (status === SdkIntegrationStatus.SDK_ENABLED) {
+      throw new BadRequestError(
+        "SDK_ENABLED can only be confirmed by a valid SDK handshake",
+      );
+    }
     const previousStatus = existingApp.sdkIntegrationStatus;
-    const hasSdk = status === SdkIntegrationStatus.SDK_ENABLED;
+    const hasSdk = false;
 
     const updatedApp = await prisma.app.update({
       where: { id: appId },

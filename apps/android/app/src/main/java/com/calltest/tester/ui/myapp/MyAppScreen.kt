@@ -52,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +69,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calltest.tester.i18n.LocalAppStrings
 import com.calltest.tester.notifications.CallTestNotificationManager
+import com.calltest.tester.data.network.CallTestApiClient
+import kotlinx.coroutines.launch
 import com.calltest.tester.ui.components.CallTestHeaderBar
 import com.calltest.tester.ui.campaigns.TesterMissionItem
 
@@ -109,6 +112,7 @@ data class TesterFeedbackItem(
 
 data class DeveloperAppCampaign(
     val id: String,
+    val appId: String = "",
     val appName: String,
     val packageName: String,
     val category: String = "Productividad ⚡",
@@ -121,6 +125,8 @@ data class DeveloperAppCampaign(
     val generatedMissions: List<TesterMissionItem> = emptyList(),
     val feedbackList: List<TesterFeedbackItem> = emptyList(),
     val status: String = "ACTIVE",
+    val apiKey: String = "",
+    val sdkIntegrationStatus: String = "NOT_CONFIGURED",
     val assignedTesters: List<AssignedTesterItem> = emptyList()
 )
 
@@ -138,6 +144,8 @@ fun MyAppScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
     val strings = LocalAppStrings.current
     var isPublishModalOpen by remember(initialWizardOpen) { mutableStateOf(initialWizardOpen) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -157,6 +165,9 @@ fun MyAppScreen(
     var editedAppNameInput by remember { mutableStateOf("") }
     var isApprovalModalOpen by remember { mutableStateOf(false) }
     var isRequestMoreTestsModalOpen by remember { mutableStateOf(false) }
+    var checkedSdkStatus by remember(selectedAppId, selectedApp?.sdkIntegrationStatus) {
+        mutableStateOf(selectedApp?.sdkIntegrationStatus ?: "NOT_CONFIGURED")
+    }
 
     Scaffold(
         topBar = {
@@ -714,6 +725,90 @@ fun MyAppScreen(
                 // SUB-PESTAÑA 1: RESUMEN Y SALUD GOOGLE PLAY
                 // ==========================================
                 if (activeSubTab == DevSubTab.SUMMARY) {
+                    item {
+                        val sdkConnected = checkedSdkStatus == "SDK_ENABLED"
+                        Card(
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (sdkConnected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.tertiaryContainer
+                                }
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    text = if (sdkConnected) "✅ SDK conectado correctamente" else "⏳ Esperando conexión del SDK",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (sdkConnected) {
+                                        "CallTest recibió una señal válida desde ${developerApp.packageName}."
+                                    } else {
+                                        "Copia esta clave en CallTestSdk.install(), compila tu app y ábrela. La conexión se confirmará automáticamente."
+                                    },
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                if (!sdkConnected && developerApp.apiKey.isNotBlank()) {
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Text("Clave de esta app", style = MaterialTheme.typography.labelSmall)
+                                            Text(
+                                                developerApp.apiKey,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                    OutlinedButton(
+                                        onClick = {
+                                            clipboardManager.setText(AnnotatedString(developerApp.apiKey))
+                                            Toast.makeText(context, "Clave del SDK copiada", Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("📋 Copiar clave")
+                                    }
+                                }
+                                OutlinedButton(
+                                    onClick = {
+                                        if (developerApp.appId.isNotBlank()) {
+                                            scope.launch {
+                                                CallTestApiClient.getApp(context, developerApp.appId)
+                                                    .onSuccess { app ->
+                                                        checkedSdkStatus = app.sdkIntegrationStatus
+                                                        Toast.makeText(
+                                                            context,
+                                                            if (app.hasCallTestSdk) "SDK conectado correctamente" else "Aún no recibimos la señal. Abre tu app y vuelve a comprobar.",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                    .onFailure { error ->
+                                                        Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+                                                    }
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("🔄 Comprobar conexión")
+                                }
+                            }
+                        }
+                    }
+
                     item {
                         // Termómetro con Anillo Visual
                         Card(
@@ -1447,7 +1542,9 @@ fun PublishAppWizardModalContent(
    maven { url = uri("https://jitpack.io") }
 
 3. En mi clase `Application` (o crea `MyApplication.kt` y regístrala en el `AndroidManifest.xml` si aún no tengo una), inicializa el SDK en `onCreate()` con:
-   CallTestSdk.install(this, apiKey = "calltest-app-key")
+   CallTestSdk.install(this, apiKey = "PEGA_AQUI_LA_CLAVE_DE_CALLTEST")
+
+La clave única aparecerá en el panel de mi app después de registrarla. No marques la integración como correcta: la app debe abrirse y el servidor de CallTest debe confirmar la conexión.
 
 Revisa mi código actual y muéstrame exactamente los cambios que debo hacer."""
 
@@ -1460,7 +1557,9 @@ Revisa mi código actual y muéstrame exactamente los cambios que debo hacer."""
    maven { url = uri("https://jitpack.io") }
 
 3. In my `Application` class (or create `MyApplication.kt` and register it in `AndroidManifest.xml` if not already present), initialize the SDK in `onCreate()` with:
-   CallTestSdk.install(this, apiKey = "calltest-app-key")
+   CallTestSdk.install(this, apiKey = "PASTE_CALLTEST_APP_KEY_HERE")
+
+The unique key will appear in my app dashboard after registration. Do not consider the integration successful until the app is opened and the CallTest server confirms the connection.
 
 Please inspect my current codebase and provide the exact modified code."""
 
@@ -1909,11 +2008,11 @@ Please inspect my current codebase and provide the exact modified code."""
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = "// Application.onCreate():", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(text = "CallTestSdk.install(this, \"API_KEY\")", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E88E5))
+                                Text(text = "CallTestSdk.install(this, \"TU_CLAVE\")", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E88E5))
                             }
                             OutlinedButton(
                                 onClick = {
-                                    clipboardManager.setText(AnnotatedString("CallTestSdk.install(this, \"API_KEY\")"))
+                                    clipboardManager.setText(AnnotatedString("CallTestSdk.install(this, \"PEGA_AQUI_LA_CLAVE_DE_CALLTEST\")"))
                                     Toast.makeText(context, "Línea Application copiada 📋", Toast.LENGTH_SHORT).show()
                                 },
                                 shape = RoundedCornerShape(8.dp)

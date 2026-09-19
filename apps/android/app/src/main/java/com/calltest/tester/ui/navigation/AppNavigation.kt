@@ -227,6 +227,7 @@ private fun MainAppNavigationContent(
                                 myPublishedApps.add(
                                     DeveloperAppCampaign(
                                         id = campaign.id,
+                                        appId = createdApp.id,
                                         appName = name,
                                         packageName = pkg,
                                         category = category,
@@ -237,7 +238,9 @@ private fun MainAppNavigationContent(
                                         targetTesters = campaign.targetTesters,
                                         externalTestersCount = ownTesters,
                                         generatedMissions = missions,
-                                        status = campaign.status
+                                        status = campaign.status,
+                                        apiKey = createdApp.apiKey,
+                                        sdkIntegrationStatus = createdApp.sdkIntegrationStatus
                                     )
                                 )
                                 userRole = "DEVELOPER"
@@ -505,6 +508,7 @@ private fun MainAppNavigationContent(
                                         myPublishedApps.add(
                                             DeveloperAppCampaign(
                                                 id = campaign.id,
+                                                appId = createdApp.id,
                                                 appName = name,
                                                 packageName = pkg,
                                                 category = category,
@@ -515,7 +519,9 @@ private fun MainAppNavigationContent(
                                                 targetTesters = campaign.targetTesters,
                                                 externalTestersCount = ownTesters,
                                                 generatedMissions = missions,
-                                                status = campaign.status
+                                                status = campaign.status,
+                                                apiKey = createdApp.apiKey,
+                                                sdkIntegrationStatus = createdApp.sdkIntegrationStatus
                                             )
                                         )
                                         Toast.makeText(

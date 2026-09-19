@@ -68,11 +68,14 @@ data class AppDto(
     val id: String,
     val name: String,
     val packageName: String,
-    val category: String,
+    val category: String = "",
     val description: String? = null,
     val playStoreUrl: String? = null,
     val googleGroupUrl: String? = null,
-    val status: String? = "ACTIVE"
+    val status: String? = "ACTIVE",
+    val hasCallTestSdk: Boolean = false,
+    val sdkIntegrationStatus: String = "NOT_CONFIGURED",
+    val apiKey: String = ""
 )
 
 @Serializable
@@ -219,6 +222,24 @@ object CallTestApiClient {
                 Result.success(apps)
             } else {
                 Result.failure(Exception("Error al cargar aplicaciones ($code): $responseText"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getApp(context: Context, appId: String): Result<AppDto> = withContext(Dispatchers.IO) {
+        try {
+            val (code, responseText) = executeHttpRequest(
+                endpoint = "/apps/$appId",
+                method = "GET",
+                jsonBody = null,
+                token = SessionManager.getAccessToken(context)
+            )
+            if (code in 200..299) {
+                Result.success(json.decodeFromString<AppDto>(responseText))
+            } else {
+                Result.failure(Exception("No fue posible comprobar el SDK ($code)."))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -10,6 +10,12 @@ import com.calltest.sdk.queue.InMemoryEventQueue
 import com.calltest.sdk.queue.SdkEvent
 import com.calltest.sdk.storage.InMemoryStorageAdapter
 import com.calltest.sdk.storage.StorageAdapter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.UUID
 
 class CallTestSdk private constructor(
@@ -18,9 +24,14 @@ class CallTestSdk private constructor(
     private val network: NetworkAdapter,
     private val queue: EventQueue
 ) {
+    enum class VerificationStatus { WAITING, CONNECTED, INVALID_KEY, PACKAGE_MISMATCH, NETWORK_ERROR }
+
     private var isInitialized: Boolean = false
     private var currentSessionId: String? = null
     private var sessionStartTimeMs: Long = 0L
+    @Volatile
+    var verificationStatus: VerificationStatus = VerificationStatus.WAITING
+        private set
 
     fun initialize() {
         isInitialized = true
@@ -70,6 +81,31 @@ class CallTestSdk private constructor(
 
     fun getQueuedEventsCount(): Int = queue.size()
 
+    private fun verifyInstallation(packageName: String) {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            verificationStatus = try {
+                val connection = (URL("${config.endpointUrl.trimEnd('/')}/sdk/handshake").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 10_000
+                    readTimeout = 10_000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("Accept", "application/json")
+                }
+                val body = """{"apiKey":"${config.apiKey}","packageName":"$packageName","sdkVersion":"1.0.0"}"""
+                connection.outputStream.bufferedWriter().use { it.write(body) }
+                when (connection.responseCode) {
+                    in 200..299 -> VerificationStatus.CONNECTED
+                    401 -> VerificationStatus.INVALID_KEY
+                    409 -> VerificationStatus.PACKAGE_MISMATCH
+                    else -> VerificationStatus.NETWORK_ERROR
+                }.also { connection.disconnect() }
+            } catch (_: Exception) {
+                VerificationStatus.NETWORK_ERROR
+            }
+        }
+    }
+
     private fun checkInitialized() {
         if (!isInitialized) {
             throw IllegalStateException("CallTestSdk must be initialized before use.")
@@ -88,10 +124,11 @@ class CallTestSdk private constructor(
         fun install(application: Application, apiKey: String): CallTestSdk {
             val config = CallTestConfig(
                 apiKey = apiKey,
-                endpointUrl = "https://api.calltest.dev",
+                endpointUrl = "https://calltest-api.onrender.com",
                 syncIntervalMs = 30000L
             )
             val sdk = init(config)
+            sdk.verifyInstallation(application.packageName)
 
             var runningActivities = 0
             application.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
