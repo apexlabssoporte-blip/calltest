@@ -5,12 +5,22 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.calltest.tester.MainActivity
+import com.calltest.tester.R
 
 object CallTestNotificationManager {
+
+    private val SMALL_ICON = R.drawable.ic_notification_calltest
+
+    private fun largeLogo(context: Context): Bitmap? =
+        ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)
+            ?.toBitmap(width = 128, height = 128)
 
     const val CHANNEL_DAILY_REMINDERS = "channel_daily_reminders"
     const val CHANNEL_DEVELOPER_UPDATES = "channel_developer_updates"
@@ -85,7 +95,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DAILY_REMINDERS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🔥 ¡Protege tu racha de $streakDays días en CallTest!")
             .setContentText("Tienes una misión de $minutesRequired min pendiente hoy en $appName.")
             .setStyle(
@@ -115,7 +126,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER_UPDATES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -144,7 +156,8 @@ object CallTestNotificationManager {
         val stars = "⭐".repeat(rating.coerceIn(1, 5))
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("$stars Nueva reseña en $appName")
             .setContentText("$testerName: $comment")
             .setStyle(
@@ -176,7 +189,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🛡️ ¡Desbloqueaste el Tester de Respaldo #$totalTesters!")
             .setContentText("Tu racha de $streakDays días activó un nuevo evaluador de respaldo y tienes 1 nueva app disponible.")
             .setStyle(
@@ -202,7 +216,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🔓 ¡Ranura $slotNumber Desbloqueada!")
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -233,7 +248,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER_UPDATES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🛡️ Tester de Respaldo en Pausa: $appName (Día 2)")
             .setContentText("A tu tester de respaldo #15 ya no le aparecerá tu app hoy. Realiza tus 3 min para reactivarlo.")
             .setStyle(
@@ -258,7 +274,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER_UPDATES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("⚠️ Pausa de Respaldos y 50% Testers: $appName (Día 3)")
             .setContentText("A los 3 testers de respaldo y al 50% de evaluadores ya no les aparecerá tu app.")
             .setStyle(
@@ -286,7 +303,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER_UPDATES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("⏸️ Pausa Total (100% de Testers): $appName (Día 4)")
             .setContentText("A ninguno de tus 15 evaluadores le aparecerá tu app hoy. Quedan 24h antes de reasignación.")
             .setStyle(
@@ -314,7 +332,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER_UPDATES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🔄 Evaluadores Reasignados: $appName (Día 5)")
             .setContentText("Tus evaluadores fueron reasignados. Google Play exige 14 días continuos. Iniciarás un nuevo ciclo al volver.")
             .setStyle(
@@ -346,7 +365,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("✨ ¡Nueva App Exclusiva: $appName!")
             .setContentText("Sé de los primeros en probar $appName ($category). ¡Toca para explorarla en Google Play!")
             .setStyle(
@@ -374,7 +394,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🎮 ¡Nuevas apps para probar esta semana!")
             .setContentText("Hay $newAppsCount nuevas aplicaciones listas para ti en CallTest. ¡Explóralas ahora!")
             .setStyle(
@@ -414,7 +435,8 @@ object CallTestNotificationManager {
             "¡Completaste tu prueba de hoy en $appName! Tu opinión honesta ayuda al creador a mejorar y a cumplir con Google Play. Toca aquí para dejarle tu valoración rápida."
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle(title)
             .setContentText(summary)
             .setStyle(
@@ -438,7 +460,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER_UPDATES)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🏆 ¡14 Días Completados con Éxito!")
             .setContentText("Tus 12 evaluadores cumplieron el ciclo en $appName. Solicita acceso a Producción en Play Console.")
             .setStyle(
@@ -466,7 +489,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🎉 ¡$appName Aprobada en Google Play!")
             .setContentText("¡Tu app está oficialmente en Producción! Ganaste la insignia de Creador Verificado 🏆.")
             .setStyle(
@@ -496,7 +520,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🛡️ ¡Tester de Respaldo #$testerNumber Desbloqueado!")
             .setContentText("Tienes una nueva app lista ($recommendedAppName). Descárgala para activar tu beneficio.")
             .setStyle(
@@ -524,7 +549,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_COMMUNITY_REWARDS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🏅 ¡Medalla de Tester de Oro Ganada!")
             .setContentText("¡Completaste los 14 días de $appName! Ganaste Asignación Preferencial 🚀.")
             .setStyle(
@@ -546,7 +572,8 @@ object CallTestNotificationManager {
         val pendingIntent = getMainActivityPendingIntent(context)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DAILY_REMINDERS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(SMALL_ICON)
+            .setLargeIcon(largeLogo(context))
             .setContentTitle("🔔 ¡Notificaciones de CallTest Activas!")
             .setContentText("Todo está listo. Recibirás tus recordatorios diarios de 3 min a la hora elegida.")
             .setStyle(

@@ -2,6 +2,8 @@ package com.calltest.tester.data.network
 
 import android.content.Context
 import com.calltest.tester.BuildConfig
+import com.calltest.tester.ui.home.AvailableCampaign
+import com.calltest.tester.ui.home.TesterParticipationSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -71,6 +73,23 @@ data class AppDto(
     val playStoreUrl: String? = null,
     val googleGroupUrl: String? = null,
     val status: String? = "ACTIVE"
+)
+
+@Serializable
+data class CreateCampaignRequest(
+    val name: String,
+    val durationDays: Int = 14
+)
+
+@Serializable
+data class CampaignDto(
+    val id: String,
+    val appId: String,
+    val name: String,
+    val status: String,
+    val targetTesters: Int,
+    val maxTesters: Int,
+    val durationDays: Int
 )
 
 @Serializable
@@ -206,6 +225,72 @@ object CallTestApiClient {
         }
     }
 
+    suspend fun getAvailableCampaigns(
+        context: Context
+    ): Result<List<AvailableCampaign>> = withContext(Dispatchers.IO) {
+        try {
+            val (code, responseText) = executeHttpRequest(
+                endpoint = "/campaigns/available",
+                method = "GET",
+                jsonBody = null,
+                token = SessionManager.getAccessToken(context)
+            )
+            if (code in 200..299) {
+                Result.success(json.decodeFromString<List<AvailableCampaign>>(responseText))
+            } else {
+                Result.failure(Exception("Error al cargar campañas ($code): $responseText"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getMyCampaigns(
+        context: Context
+    ): Result<List<TesterParticipationSummary>> = withContext(Dispatchers.IO) {
+        try {
+            val (code, responseText) = executeHttpRequest(
+                endpoint = "/me/campaigns",
+                method = "GET",
+                jsonBody = null,
+                token = SessionManager.getAccessToken(context)
+            )
+            if (code in 200..299) {
+                Result.success(json.decodeFromString<List<TesterParticipationSummary>>(responseText))
+            } else {
+                Result.failure(Exception("Error al cargar tus pruebas ($code): $responseText"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun joinCampaign(context: Context, campaignId: String): Result<Boolean> =
+        withContext(Dispatchers.IO) {
+            try {
+                val (code, responseText) = executeHttpRequest(
+                    endpoint = "/campaigns/$campaignId/join",
+                    method = "POST",
+                    jsonBody = "{}",
+                    token = SessionManager.getAccessToken(context)
+                )
+                if (code in 200..299) {
+                    Result.success(true)
+                } else {
+                    val message = when {
+                        responseText.contains("RECIPROCITY_APP_LIMIT_REACHED") ->
+                            "Ya tienes 3 apps activas. Completa una campaña antes de descargar otra."
+                        responseText.contains("tester slots") ->
+                            "Esta app ya alcanzó los testers que su creador ha desbloqueado."
+                        else -> "No fue posible unirte ($code): $responseText"
+                    }
+                    Result.failure(Exception(message))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
     suspend fun createNewApp(
         context: Context,
         name: String,
@@ -238,6 +323,31 @@ object CallTestApiClient {
                 Result.success(created)
             } else {
                 Result.failure(Exception("Error al publicar app ($code): $responseText"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createCampaign(
+        context: Context,
+        appId: String,
+        appName: String
+    ): Result<CampaignDto> = withContext(Dispatchers.IO) {
+        try {
+            val body = json.encodeToString(
+                CreateCampaignRequest(name = "$appName - Prueba cerrada")
+            )
+            val (code, responseText) = executeHttpRequest(
+                endpoint = "/apps/$appId/campaigns",
+                method = "POST",
+                jsonBody = body,
+                token = SessionManager.getAccessToken(context)
+            )
+            if (code in 200..299) {
+                Result.success(json.decodeFromString<CampaignDto>(responseText))
+            } else {
+                Result.failure(Exception("Error al crear campaña ($code): $responseText"))
             }
         } catch (e: Exception) {
             Result.failure(e)

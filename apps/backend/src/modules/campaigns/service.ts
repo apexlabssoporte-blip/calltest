@@ -14,6 +14,7 @@ import {
   TesterStatus,
 } from "@calltest/shared-types";
 import { CreateCampaignRequest, UpdateCampaignRequest } from "./schemas.js";
+import { CampaignCapacityService } from "./capacity.service.js";
 
 export class CampaignService {
   /**
@@ -28,7 +29,9 @@ export class CampaignService {
   ) {
     await verifyAppOwnership(appId, userId, userRole);
 
-    const targetTesters = data.targetTesters ?? env.CAMPAIGN_TARGET_TESTERS;
+    const reciprocalCapacity = await CampaignCapacityService.getDeveloperCapacity(userId);
+    const requestedTarget = data.targetTesters ?? env.CAMPAIGN_TARGET_TESTERS;
+    const targetTesters = Math.min(requestedTarget, reciprocalCapacity.maxCoreTesters);
     const maxTesters = data.maxTesters ?? env.CAMPAIGN_MAX_TESTERS;
     const durationDays = data.durationDays ?? env.CAMPAIGN_DURATION_DAYS;
 
@@ -55,7 +58,14 @@ export class CampaignService {
       action: AuditAction.CAMPAIGN_CREATED,
       entityName: "Campaign",
       entityId: campaign.id,
-      changes: { name: campaign.name, targetTesters, maxTesters, durationDays },
+      changes: {
+        name: campaign.name,
+        targetTesters,
+        maxTesters,
+        durationDays,
+        completedReciprocalApps: reciprocalCapacity.completedAppsCount,
+        earnedCoreTesters: reciprocalCapacity.maxCoreTesters,
+      },
       ipAddress: context?.ipAddress,
       userAgent: context?.userAgent,
     });
@@ -138,7 +148,9 @@ export class CampaignService {
       );
     }
 
-    const targetTesters = data.targetTesters ?? campaign.targetTesters;
+    const reciprocalCapacity = await CampaignCapacityService.getDeveloperCapacity(userId);
+    const requestedTarget = data.targetTesters ?? campaign.targetTesters;
+    const targetTesters = Math.min(requestedTarget, reciprocalCapacity.maxCoreTesters);
     const maxTesters = data.maxTesters ?? campaign.maxTesters;
 
     if (maxTesters < targetTesters) {
@@ -151,7 +163,7 @@ export class CampaignService {
       where: { id: campaignId },
       data: {
         name: data.name ? data.name.trim() : undefined,
-        targetTesters: data.targetTesters !== undefined ? data.targetTesters : undefined,
+        targetTesters,
         maxTesters: data.maxTesters !== undefined ? data.maxTesters : undefined,
         durationDays: data.durationDays !== undefined ? data.durationDays : undefined,
       },

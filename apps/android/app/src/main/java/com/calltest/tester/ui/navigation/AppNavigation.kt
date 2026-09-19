@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -179,80 +180,23 @@ private fun MainAppNavigationContent(
         )
     }
 
-    val availableApps = remember {
-        mutableStateListOf(
-            AvailableCampaign(
-                id = "camp-v1-001",
-                appId = "app-001",
-                name = "Fintech Tracker V1",
-                appName = "Fintech Tracker",
-                packageName = "com.fintech.tracker",
-                developerName = "Fintech Apps Inc.",
-                appDescription = "App de finanzas personales para tracking de gastos y presupuestos mensuales.",
-                googleGroupUrl = "https://groups.google.com/g/calltest-testers",
-                playStoreWebUrl = "https://play.google.com/apps/testing/com.fintech.tracker",
-                playStoreAppUrl = "https://play.google.com/store/apps/details?id=com.fintech.tracker",
-                status = "ACTIVE",
-                durationDays = 14,
-                targetTesters = 12,
-                activeTestersCount = 4,
-                featureTags = listOf("📊 Control de Gastos", "💡 Ahorro Mensual", "🔒 100% Privado")
-            ),
-            AvailableCampaign(
-                id = "camp-v1-002",
-                appId = "app-002",
-                name = "Habit Hero Daily",
-                appName = "Habit Hero",
-                packageName = "com.habithero.app",
-                developerName = "Habit Labs",
-                appDescription = "Seguimiento de hábitos diarios, recordatorios inteligentes y estadísticas de racha.",
-                googleGroupUrl = "https://groups.google.com/g/calltest-testers",
-                playStoreWebUrl = "https://play.google.com/apps/testing/com.habithero.app",
-                playStoreAppUrl = "https://play.google.com/store/apps/details?id=com.habithero.app",
-                status = "ACTIVE",
-                durationDays = 14,
-                targetTesters = 12,
-                activeTestersCount = 7,
-                featureTags = listOf("🔥 Contador de Racha", "⏰ Alarmas Inteligentes", "📈 Progreso Semanal")
-            ),
-            AvailableCampaign(
-                id = "camp-v1-003",
-                appId = "app-003",
-                name = "Crypto Vault Secure",
-                appName = "Crypto Vault",
-                packageName = "com.cryptovault.wallet",
-                developerName = "Vault Security Co.",
-                appDescription = "Billetera digital con autenticación biométrica y cotizaciones en vivo.",
-                googleGroupUrl = "https://groups.google.com/g/calltest-testers",
-                playStoreWebUrl = "https://play.google.com/apps/testing/com.cryptovault.wallet",
-                playStoreAppUrl = "https://play.google.com/store/apps/details?id=com.cryptovault.wallet",
-                status = "ACTIVE",
-                durationDays = 14,
-                targetTesters = 12,
-                activeTestersCount = 2,
-                featureTags = listOf("⚡ Cotizaciones en Vivo", "🛡️ Biometría", "💼 Portafolio Fácil")
-            )
-        )
-    }
+    val availableApps = remember { mutableStateListOf<AvailableCampaign>() }
 
-    val participatingApps = remember {
-        mutableStateListOf(
-            TesterParticipationSummary(
-                participationId = "part-sample-1",
-                campaignId = "camp-v1-001",
-                appId = "app-001",
-                campaignName = "Fintech Tracker V1",
-                appName = "Fintech Tracker",
-                packageName = "com.fintech.tracker",
-                developerName = "Fintech Apps Inc.",
-                status = "ACTIVE",
-                dayOfParticipation = 1,
-                totalDurationDays = 14,
-                missionsCompleted = 0,
-                totalMissions = 14,
-                featureTags = listOf("📊 Control de Gastos", "💡 Ahorro Mensual", "🔒 100% Privado")
-            )
-        )
+    val participatingApps = remember { mutableStateListOf<TesterParticipationSummary>() }
+
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
+            // Never fall back to sample campaigns: reciprocity and eligibility
+            // must always come from the server.
+            availableApps.clear()
+            participatingApps.clear()
+
+            CallTestApiClient.getAvailableCampaigns(context)
+                .onSuccess { campaigns -> availableApps.addAll(campaigns) }
+
+            CallTestApiClient.getMyCampaigns(context)
+                .onSuccess { campaigns -> participatingApps.addAll(campaigns) }
+        }
     }
 
     if (!isAuthenticated) {
@@ -269,7 +213,7 @@ private fun MainAppNavigationContent(
             initialWizardOpen = true,
             onCreateAppCampaign = { name, pkg, category, desc, group, ownTesters, missions ->
                 scope.launch {
-                    CallTestApiClient.createNewApp(
+                    val appResult = CallTestApiClient.createNewApp(
                         context = context,
                         name = name,
                         packageName = pkg,
@@ -277,41 +221,42 @@ private fun MainAppNavigationContent(
                         description = desc,
                         googleGroupUrl = group
                     )
+                    appResult.onSuccess { createdApp ->
+                        CallTestApiClient.createCampaign(context, createdApp.id, name)
+                            .onSuccess { campaign ->
+                                myPublishedApps.add(
+                                    DeveloperAppCampaign(
+                                        id = campaign.id,
+                                        appName = name,
+                                        packageName = pkg,
+                                        category = category,
+                                        description = desc,
+                                        currentDay = 1,
+                                        totalDays = 14,
+                                        activeTestersCount = 0,
+                                        targetTesters = campaign.targetTesters,
+                                        externalTestersCount = ownTesters,
+                                        generatedMissions = missions,
+                                        status = campaign.status
+                                    )
+                                )
+                                userRole = "DEVELOPER"
+                                SessionManager.updateSelectedRole(context, "DEVELOPER")
+                                isPublishWizardOpen = false
+                                currentTab = MainTabDestination.MY_APP
+                                Toast.makeText(
+                                    context,
+                                    "Campaña creada con ${campaign.targetTesters} testers desbloqueados.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            .onFailure { error ->
+                                Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+                            }
+                    }.onFailure { error ->
+                        Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+                    }
                 }
-                val newApp = DeveloperAppCampaign(
-                    id = "dev-${System.currentTimeMillis()}",
-                    appName = name,
-                    packageName = pkg,
-                    category = category,
-                    description = desc,
-                    currentDay = 1,
-                    totalDays = 14,
-                    activeTestersCount = 1,
-                    targetTesters = 12,
-                    externalTestersCount = ownTesters,
-                    generatedMissions = missions,
-                    status = "ACTIVE",
-                    assignedTesters = listOf(
-                        AssignedTesterItem(
-                            id = "t-1",
-                            alias = "Tester Comunitario 1",
-                            tier = "ACTIVO",
-                            deviceModel = "Xiaomi Redmi Note 13 (Android 14)",
-                            daysCompleted = 1,
-                            totalDays = 14,
-                            todayMinutes = 3.2,
-                            totalMinutes = 3.2,
-                            isTodayCompleted = true,
-                            isSdkMeasured = true
-                        )
-                    )
-                )
-                myPublishedApps.add(newApp)
-                userRole = "DEVELOPER"
-                SessionManager.updateSelectedRole(context, "DEVELOPER")
-                isPublishWizardOpen = false
-                currentTab = MainTabDestination.MY_APP
-                Toast.makeText(context, "¡$name publicada con éxito! La pestaña 'Mi App' ya está desbloqueada.", Toast.LENGTH_LONG).show()
             },
             onOpenProfile = { isProfileOpen = true },
             onOpenNotifications = { isNotificationsOpen = true },
@@ -473,25 +418,30 @@ private fun MainAppNavigationContent(
                         isPublishWizardOpen = true
                     },
                     onJoinCampaign = { app ->
-                        val alreadyJoined = participatingApps.any { it.campaignId == app.id }
-                        if (!alreadyJoined) {
-                            participatingApps.add(
-                                TesterParticipationSummary(
-                                    participationId = "part-${app.id}",
-                                    campaignId = app.id,
-                                    appId = app.appId,
-                                    campaignName = app.name,
-                                    appName = app.appName,
-                                    packageName = app.packageName,
-                                    developerName = app.developerName,
-                                    status = "ACTIVE",
-                                    dayOfParticipation = 1,
-                                    totalDurationDays = app.durationDays,
-                                    missionsCompleted = 0,
-                                    totalMissions = 14,
-                                    featureTags = app.featureTags
-                                )
-                            )
+                        scope.launch {
+                            CallTestApiClient.joinCampaign(context, app.id)
+                                .onSuccess {
+                                    val available = CallTestApiClient.getAvailableCampaigns(context)
+                                        .getOrDefault(emptyList())
+                                    val participating = CallTestApiClient.getMyCampaigns(context)
+                                        .getOrDefault(emptyList())
+                                    availableApps.clear()
+                                    availableApps.addAll(available)
+                                    participatingApps.clear()
+                                    participatingApps.addAll(participating)
+                                    Toast.makeText(
+                                        context,
+                                        "App asignada. Tienes ${participating.count { it.status == "ACTIVE" }} de 3 pruebas activas.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                .onFailure { error ->
+                                    Toast.makeText(
+                                        context,
+                                        error.message ?: "No fue posible asignar la app.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                         }
                     },
                     onOpenProfile = {
@@ -537,7 +487,7 @@ private fun MainAppNavigationContent(
                     },
                     onCreateAppCampaign = { name, pkg, category, desc, group, ownTesters, missions ->
                         scope.launch {
-                            CallTestApiClient.createNewApp(
+                            val appResult = CallTestApiClient.createNewApp(
                                 context = context,
                                 name = name,
                                 packageName = pkg,
@@ -545,22 +495,38 @@ private fun MainAppNavigationContent(
                                 description = desc,
                                 googleGroupUrl = group
                             )
+                            appResult.onSuccess { createdApp ->
+                                CallTestApiClient.createCampaign(context, createdApp.id, name)
+                                    .onSuccess { campaign ->
+                                        myPublishedApps.add(
+                                            DeveloperAppCampaign(
+                                                id = campaign.id,
+                                                appName = name,
+                                                packageName = pkg,
+                                                category = category,
+                                                description = desc,
+                                                currentDay = 1,
+                                                totalDays = 14,
+                                                activeTestersCount = 0,
+                                                targetTesters = campaign.targetTesters,
+                                                externalTestersCount = ownTesters,
+                                                generatedMissions = missions,
+                                                status = campaign.status
+                                            )
+                                        )
+                                        Toast.makeText(
+                                            context,
+                                            "Campaña creada con ${campaign.targetTesters} testers desbloqueados.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                    .onFailure { error ->
+                                        Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+                                    }
+                            }.onFailure { error ->
+                                Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
+                            }
                         }
-                        val newApp = DeveloperAppCampaign(
-                            id = "dev-${System.currentTimeMillis()}",
-                            appName = name,
-                            packageName = pkg,
-                            category = category,
-                            description = desc,
-                            currentDay = 1,
-                            totalDays = 14,
-                            activeTestersCount = 1,
-                            targetTesters = 12,
-                            externalTestersCount = ownTesters,
-                            generatedMissions = missions,
-                            status = "ACTIVE"
-                        )
-                        myPublishedApps.add(newApp)
                     },
                     onOpenProfile = {
                         isProfileOpen = true

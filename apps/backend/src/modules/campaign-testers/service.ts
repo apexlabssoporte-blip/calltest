@@ -21,6 +21,16 @@ import {
 import { AddTesterToCampaignRequest } from "./schemas.js";
 import { eventBus } from "../../core/events/domain-event-bus.js";
 import { ParticipationVerificationService } from "../participation/service.js";
+import {
+  CampaignCapacityService,
+  MAX_SIMULTANEOUS_RECIPROCAL_APPS,
+} from "../campaigns/capacity.service.js";
+
+const ACTIVE_PARTICIPATION_STATUSES = [
+  TesterStatus.INVITED,
+  TesterStatus.ACTIVE,
+  TesterStatus.LOW_ACTIVITY,
+];
 
 export class CampaignTesterService {
   /**
@@ -73,6 +83,9 @@ export class CampaignTesterService {
     }
 
     const assignedStatus = data.status ?? TesterStatus.ACTIVE;
+    const reciprocalCapacity = await CampaignCapacityService.getDeveloperCapacity(
+      campaign.app.developerId,
+    );
 
     // Individual participation dates calculation (never based on global campaign.startsAt)
     const joinedAt = new Date();
@@ -81,18 +94,33 @@ export class CampaignTesterService {
     );
 
     const campaignTester = await prisma.$transaction(async (tx) => {
-      // Rule of 12 / 15: Maximum active testers constraint inside transaction
+      // Reciprocal core capacity: 3, 6, 9 or 12 testers according to the
+      // developer's completed testing participations. Backups remain governed
+      // by the campaign's separate maximum capacity.
       if (assignedStatus === TesterStatus.ACTIVE) {
-        const activeTestersCount = await tx.campaignTester.count({
+        const activeCoreTestersCount = await tx.campaignTester.count({
           where: {
             campaignId,
             status: TesterStatus.ACTIVE,
+            assignmentType: { not: TesterAssignmentType.BACKUP },
           },
         });
 
-        if (activeTestersCount >= campaign.maxTesters) {
+        const isBackup = data.assignmentType === TesterAssignmentType.BACKUP;
+        const activeTestersCount = isBackup
+          ? await tx.campaignTester.count({
+              where: { campaignId, status: TesterStatus.ACTIVE },
+            })
+          : activeCoreTestersCount;
+        const allowedCapacity = isBackup
+          ? campaign.maxTesters
+          : reciprocalCapacity.maxCoreTesters;
+
+        if (activeTestersCount >= allowedCapacity) {
           throw new BadRequestError(
-            `Cannot exceed maximum of ${campaign.maxTesters} active testers for this campaign`,
+            isBackup
+              ? `Cannot exceed maximum of ${campaign.maxTesters} active testers for this campaign`
+              : `RECIPROCITY_LIMIT_REACHED: Complete more app testing campaigns to unlock more than ${reciprocalCapacity.maxCoreTesters} testers`,
           );
         }
       }
@@ -205,6 +233,24 @@ export class CampaignTesterService {
       throw new ConflictError("You are already actively participating in this campaign");
     }
 
+    const activeReciprocalApps = await prisma.campaignTester.count({
+      where: {
+        testerId,
+        status: { in: ACTIVE_PARTICIPATION_STATUSES },
+        assignmentType: { not: TesterAssignmentType.BACKUP },
+      },
+    });
+
+    if (activeReciprocalApps >= MAX_SIMULTANEOUS_RECIPROCAL_APPS) {
+      throw new BadRequestError(
+        `RECIPROCITY_APP_LIMIT_REACHED: Complete one of your ${MAX_SIMULTANEOUS_RECIPROCAL_APPS} active app tests before downloading another app`,
+      );
+    }
+
+    const developerCapacity = await CampaignCapacityService.getDeveloperCapacity(
+      campaign.app.developerId,
+    );
+
     // Individual participation timeline
     const now = new Date();
     const expectedEndAt = new Date(now.getTime() + campaign.durationDays * 24 * 60 * 60 * 1000);
@@ -215,11 +261,14 @@ export class CampaignTesterService {
         where: {
           campaignId,
           status: TesterStatus.ACTIVE,
+          assignmentType: { not: TesterAssignmentType.BACKUP },
         },
       });
 
-      if (activeTestersCount >= campaign.maxTesters) {
-        throw new BadRequestError("This campaign has reached its maximum tester capacity (15)");
+      if (activeTestersCount >= developerCapacity.maxCoreTesters) {
+        throw new BadRequestError(
+          `This developer has earned ${developerCapacity.maxCoreTesters} tester slots. More slots unlock after completing additional app tests`,
+        );
       }
 
       const membership = await tx.campaignTester.create({
@@ -290,6 +339,18 @@ export class CampaignTesterService {
    * Lists campaigns available for discovery and self-enrollment by an authenticated tester.
    */
   public static async listAvailableCampaignsForTester(testerId: string) {
+    const activeReciprocalApps = await prisma.campaignTester.count({
+      where: {
+        testerId,
+        status: { in: ACTIVE_PARTICIPATION_STATUSES },
+        assignmentType: { not: TesterAssignmentType.BACKUP },
+      },
+    });
+
+    if (activeReciprocalApps >= MAX_SIMULTANEOUS_RECIPROCAL_APPS) {
+      return [];
+    }
+
     const campaigns = await prisma.campaign.findMany({
       where: {
         status: {
@@ -328,9 +389,24 @@ export class CampaignTesterService {
       orderBy: { createdAt: "desc" },
     });
 
-    // Filter campaigns that have available capacity (< 15)
+    const developerCapacities = new Map<string, number>();
+    for (const campaign of campaigns) {
+      if (!developerCapacities.has(campaign.app.developerId)) {
+        const capacity = await CampaignCapacityService.getDeveloperCapacity(
+          campaign.app.developerId,
+        );
+        developerCapacities.set(campaign.app.developerId, capacity.maxCoreTesters);
+      }
+    }
+
+    // Only expose campaigns for which the developer has earned an open
+    // reciprocal tester slot.
     return campaigns
-      .filter((c) => c.campaignTesters.length < c.maxTesters)
+      .filter(
+        (c) =>
+          c.campaignTesters.length <
+          (developerCapacities.get(c.app.developerId) ?? 3),
+      )
       .map((c) => ({
         id: c.id,
         appId: c.appId,

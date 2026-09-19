@@ -1,8 +1,11 @@
 import { RELIABLE_THRESHOLD } from "../trust/tester-reliability.service.js";
+import { prisma } from "../../core/database/prisma.js";
+import { TesterStatus } from "@calltest/shared-types";
 
 export const CAMPAIGN_ACTIVE_TESTER_TARGET = 12;
 export const CAMPAIGN_BACKUP_TARGET = 3;
 export const CAMPAIGN_TOTAL_TARGET = 15;
+export const MAX_SIMULTANEOUS_RECIPROCAL_APPS = 3;
 
 export interface CampaignCapacityStatus {
   campaignId: string;
@@ -34,6 +37,22 @@ export interface ReinforcementEligibilityResult {
 }
 
 export class CampaignCapacityService {
+  /**
+   * Returns the developer's earned tester capacity. A completed testing
+   * participation is the reciprocal unit that unlocks more testers for the
+   * developer's own applications.
+   */
+  public static async getDeveloperCapacity(developerId: string): Promise<ProgressiveCapacityResult> {
+    const completedAppsCount = await prisma.campaignTester.count({
+      where: {
+        testerId: developerId,
+        status: TesterStatus.COMPLETED,
+      },
+    });
+
+    return this.calculateDeveloperCapacity(completedAppsCount);
+  }
+
   /**
    * Evaluates current campaign capacity against 12 active + 3 backup targets.
    */
