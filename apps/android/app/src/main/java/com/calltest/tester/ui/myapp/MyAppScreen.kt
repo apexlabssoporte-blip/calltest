@@ -727,6 +727,22 @@ fun MyAppScreen(
                 if (activeSubTab == DevSubTab.SUMMARY) {
                     item {
                         val sdkConnected = checkedSdkStatus == "SDK_ENABLED"
+                        val sdkIntegrationPrompt = """Actúa como un desarrollador experto en Android e integra el SDK oficial de CallTest en mi aplicación.
+
+Datos de mi app:
+- Paquete Android: ${developerApp.packageName}
+- Clave única de CallTest: ${developerApp.apiKey}
+
+Realiza estos cambios:
+1. Agrega implementation(\"com.github.calltest:sdk:1.0.0\") al módulo :app.
+2. Configura JitPack con maven { url = uri(\"https://jitpack.io\") } si aún no existe.
+3. En la clase Application inicializa exactamente:
+   CallTestSdk.install(this, apiKey = \"${developerApp.apiKey}\")
+4. Si no existe una clase Application, créala y regístrala en AndroidManifest.xml.
+5. Verifica que el paquete del proyecto sea ${developerApp.packageName}.
+6. Compila y abre la app para que CallTest confirme automáticamente la conexión.
+
+No imprimas ni publiques la clave. Revisa el proyecto y aplica directamente los cambios necesarios."""
                         Card(
                             shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(
@@ -771,6 +787,15 @@ fun MyAppScreen(
                                                 overflow = TextOverflow.Ellipsis
                                             )
                                         }
+                                    }
+                                    OutlinedButton(
+                                        onClick = {
+                                            clipboardManager.setText(AnnotatedString(sdkIntegrationPrompt))
+                                            Toast.makeText(context, "Prompt completo copiado con la clave de esta app", Toast.LENGTH_LONG).show()
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("🤖 Copiar prompt completo")
                                     }
                                     OutlinedButton(
                                         onClick = {
@@ -1943,11 +1968,11 @@ Please inspect my current codebase and provide the exact modified code."""
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "🤖 Configurar con ayuda de IA", fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(text = "🤖 Ver ejemplo del prompt", fontWeight = FontWeight.Bold, color = Color.White)
                     }
 
                     Text(
-                        text = "Recomendado: normalmente solo necesitas copiar, pegar y aceptar los cambios sugeridos.",
+                        text = "Después de registrar tu app, CallTest creará el prompt completo con su clave real. Solo tendrás que copiarlo y pegarlo en tu IA.",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 6.dp)
