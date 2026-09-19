@@ -413,7 +413,11 @@ private fun MainAppNavigationContent(
             when (currentTab) {
                 MainTabDestination.HOME -> HomeScreen(
                     availableCampaigns = availableApps,
+                    participatingCampaigns = participatingApps,
                     isDeveloperMode = isDev,
+                    onOpenMissions = {
+                        currentTab = MainTabDestination.MISSIONS
+                    },
                     onPublishAppClick = {
                         isPublishWizardOpen = true
                     },

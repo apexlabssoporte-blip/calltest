@@ -65,7 +65,9 @@ import com.calltest.tester.ui.components.EmptyStateView
 @Composable
 fun HomeScreen(
     availableCampaigns: List<AvailableCampaign>,
+    participatingCampaigns: List<TesterParticipationSummary> = emptyList(),
     onJoinCampaign: (AvailableCampaign) -> Unit,
+    onOpenMissions: () -> Unit = {},
     isDeveloperMode: Boolean = true,
     onPublishAppClick: () -> Unit = {},
     onOpenProfile: () -> Unit,
@@ -75,6 +77,10 @@ fun HomeScreen(
     val context = LocalContext.current
     var selectedAppForDownload by remember { mutableStateOf<AvailableCampaign?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val campaignsWithPendingMissions = participatingCampaigns.filter { campaign ->
+        campaign.status in setOf("INVITED", "ACTIVE", "LOW_ACTIVITY") &&
+            campaign.missionsCompleted < campaign.totalMissions.coerceAtLeast(14)
+    }
 
     var reportingLinkType by remember { mutableStateOf<String?>(null) }
     var reportErrorComment by remember { mutableStateOf("") }
@@ -89,6 +95,7 @@ fun HomeScreen(
                 reportErrorImageName = "error_${System.currentTimeMillis()}.jpg"
                 Toast.makeText(context, "Captura del error adjuntada 📷✓", Toast.LENGTH_SHORT).show()
             }
+
         }
     )
 
@@ -126,6 +133,52 @@ fun HomeScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+
+            if (campaignsWithPendingMissions.isNotEmpty()) {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onOpenMissions)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(text = "✅", fontSize = 28.sp)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Haz tus misiones pendientes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Text(
+                                    text = if (campaignsWithPendingMissions.size >= 3) {
+                                        "Ya descargaste 3 apps. Completa sus misiones para poder descargar más apps y obtener más testers."
+                                    } else {
+                                        "Completa las misiones de tus apps descargadas para liberar nuevas descargas y obtener más testers."
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            Button(
+                                onClick = onOpenMissions,
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Ir a Misiones", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -173,8 +226,12 @@ fun HomeScreen(
                 item {
                     EmptyStateView(
                         title = "No hay nuevas apps disponibles",
-                        description = "Vuelve a consultar más tarde para unirte a nuevos ciclos de prueba.",
-                        icon = "⏳",
+                        description = if (campaignsWithPendingMissions.isNotEmpty()) {
+                            "Completa tus misiones pendientes para liberar espacio y poder descargar otra app."
+                        } else {
+                            "Vuelve a consultar más tarde para unirte a nuevos ciclos de prueba."
+                        },
+                        icon = if (campaignsWithPendingMissions.isNotEmpty()) "📋" else "⏳",
                         modifier = Modifier.padding(top = 20.dp)
                     )
                 }
