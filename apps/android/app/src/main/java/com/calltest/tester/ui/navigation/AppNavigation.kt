@@ -1,7 +1,9 @@
 package com.calltest.tester.ui.navigation
 
 import android.widget.Toast
+import com.calltest.tester.BuildConfig
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
@@ -10,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -23,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calltest.tester.data.models.NotificationItem
@@ -89,9 +93,10 @@ private fun MainAppNavigationContent(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var isAuthenticated by remember { mutableStateOf(SessionManager.isLoggedIn(context)) }
-    var isOnboardingDone by remember { mutableStateOf(SessionManager.isOnboardingCompleted(context)) }
-    var userRole by remember { mutableStateOf(SessionManager.getSelectedRole(context)) }
+    val demoMode = BuildConfig.CALLTEST_DEMO_MODE
+    var isAuthenticated by remember { mutableStateOf(demoMode || SessionManager.isLoggedIn(context)) }
+    var isOnboardingDone by remember { mutableStateOf(demoMode || SessionManager.isOnboardingCompleted(context)) }
+    var userRole by remember { mutableStateOf(if (demoMode) "DEVELOPER" else SessionManager.getSelectedRole(context)) }
     var currentTab by remember { mutableStateOf(MainTabDestination.HOME) }
     var selectedMission by remember { mutableStateOf<TesterMissionItem?>(null) }
     var isProfileOpen by remember { mutableStateOf(false) }
@@ -101,7 +106,33 @@ private fun MainAppNavigationContent(
 
     var isPublishWizardOpen by remember { mutableStateOf(false) }
     val myPublishedApps = remember {
-        mutableStateListOf<DeveloperAppCampaign>()
+        mutableStateListOf<DeveloperAppCampaign>().apply {
+            if (demoMode) {
+                add(
+                    DeveloperAppCampaign(
+                        id = "demo-campaign-owner",
+                        appId = "demo-app-owner",
+                        appName = "FocusFlow",
+                        packageName = "com.demo.focusflow",
+                        category = "Productividad ⚡",
+                        description = "Organiza tareas, sesiones de enfoque y objetivos semanales.",
+                        currentDay = 6,
+                        totalDays = 14,
+                        activeTestersCount = 3,
+                        targetTesters = 3,
+                        externalTestersCount = 0,
+                        status = "ACTIVE",
+                        apiKey = "apk_demo_solo_para_capturas",
+                        sdkIntegrationStatus = "SDK_ENABLED",
+                        assignedTesters = listOf(
+                            AssignedTesterItem("demo-t1", "María G.", "ACTIVE", "Pixel 8", 6, 14, 3.8, 22.4, true, true),
+                            AssignedTesterItem("demo-t2", "Carlos R.", "ACTIVE", "Galaxy S24", 6, 14, 3.4, 20.8, true, true),
+                            AssignedTesterItem("demo-t3", "Ana P.", "ACTIVE", "Xiaomi 14", 5, 14, 0.0, 17.6, false, true)
+                        )
+                    )
+                )
+            }
+        }
     }
 
     // Mock initial missions per campaign (Enfoque motivador orientado a beneficios)
@@ -180,12 +211,81 @@ private fun MainAppNavigationContent(
         )
     }
 
-    val availableApps = remember { mutableStateListOf<AvailableCampaign>() }
+    val availableApps = remember {
+        mutableStateListOf<AvailableCampaign>().apply {
+            if (demoMode) {
+                addAll(
+                    listOf(
+                        AvailableCampaign(
+                            id = "camp-v1-001",
+                            appId = "demo-finance",
+                            name = "Prueba cerrada de WalletWise",
+                            appName = "WalletWise",
+                            packageName = "com.demo.walletwise",
+                            appDescription = "Controla gastos y crea presupuestos sencillos.",
+                            developerName = "Estudio Norte",
+                            status = "ACTIVE",
+                            durationDays = 14,
+                            targetTesters = 3,
+                            activeTestersCount = 2,
+                            hasCallTestSdk = true,
+                            sdkIntegrationStatus = "SDK_ENABLED",
+                            verificationMethodLabel = "CallTest SDK",
+                            featureTags = listOf("💰 Presupuestos", "📊 Gastos", "🔒 Privacidad")
+                        ),
+                        AvailableCampaign(
+                            id = "camp-v1-002",
+                            appId = "demo-habits",
+                            name = "Prueba cerrada de HabitBloom",
+                            appName = "HabitBloom",
+                            packageName = "com.demo.habitbloom",
+                            appDescription = "Crea hábitos positivos y mantén tu racha diaria.",
+                            developerName = "Bloom Labs",
+                            status = "ACTIVE",
+                            durationDays = 14,
+                            targetTesters = 3,
+                            activeTestersCount = 1,
+                            featureTags = listOf("🔥 Rachas", "⏰ Recordatorios", "📈 Progreso")
+                        )
+                    )
+                )
+            }
+        }
+    }
 
-    val participatingApps = remember { mutableStateListOf<TesterParticipationSummary>() }
+    val participatingApps = remember {
+        mutableStateListOf<TesterParticipationSummary>().apply {
+            if (demoMode) {
+                add(
+                    TesterParticipationSummary(
+                        participationId = "demo-participation",
+                        campaignId = "camp-v1-003",
+                        appId = "demo-calm",
+                        campaignName = "Prueba de CalmSteps",
+                        appName = "CalmSteps",
+                        packageName = "com.demo.calmsteps",
+                        developerName = "Wellness Studio",
+                        hasCallTestSdk = true,
+                        sdkIntegrationStatus = "SDK_ENABLED",
+                        verificationMethodLabel = "CallTest SDK",
+                        status = "ACTIVE",
+                        participationStatus = "ACTIVE",
+                        activityScore = 96.0,
+                        dayOfParticipation = 5,
+                        totalDurationDays = 14,
+                        installationStatus = "VERIFIED",
+                        missionsCompleted = 4,
+                        missionsPending = 10,
+                        totalMissions = 14,
+                        featureTags = listOf("🧘 Bienestar", "🎯 Rutinas", "📈 Progreso")
+                    )
+                )
+            }
+        }
+    }
 
     LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
+        if (isAuthenticated && !demoMode) {
             // Never fall back to sample campaigns: reciprocity and eligibility
             // must always come from the server.
             availableApps.clear()
@@ -358,6 +458,22 @@ private fun MainAppNavigationContent(
         )
     } else {
         Scaffold(
+            topBar = {
+                if (demoMode) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "VISTA DEMO • Datos de ejemplo para capturas",
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            },
             bottomBar = {
                 val isDeveloperMode = userRole == "DEVELOPER"
                 val visibleTabs = if (isDeveloperMode) {
